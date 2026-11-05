@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8f6f2">
+  <meta name="description" content="Explora el catálogo de alquiler de mobiliario para eventos de Laura Galindo y solicita una cotización personalizada.">
+  <title>Laura Galindo Eventos | Catálogo de alquiler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="announcement">Mobiliario y detalles para celebrar como lo imaginaste</div>
+  <header class="site-header">
+    <a class="brand" href="#inicio" aria-label="Laura Galindo Eventos, inicio">
+      <span class="brand-mark">LG</span>
+      <span class="brand-name">Laura Galindo <small>EVENTOS</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Navegación principal">
+      <a href="#catalogo">Catálogo</a><a href="#nosotros">Nosotros</a>
+    </nav>
+    <button class="cart-trigger" id="openCart" aria-label="Abrir canasta">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H7M10 21h.01M18 21h.01"/></svg>
+      <span>Mi canasta</span><b id="cartCount">0</b>
+    </button>
+  </header>
+
+  <main>
+    <section class="hero" id="inicio">
+      <div class="hero-copy">
+        <span class="eyebrow"><i></i> ALQUILER PARA EVENTOS</span>
+        <h1>Tu celebración,<br><em>con todos sus detalles.</em></h1>
+        <p>Encuentra piezas especiales para crear una mesa inolvidable y espacios que se sienten tuyos.</p>
+        <a class="button button-dark" href="#catalogo">Explorar catálogo <span>↗</span></a>
+        <div class="hero-note"><span class="note-stars">✳ ✳ ✳</span><span>Atención cercana, momentos memorables</span></div>
+      </div>
+      <div class="hero-art" role="img" aria-label="Ambiente elegante para celebrar">
+        <div class="hero-image"></div>
+        <div class="hero-caption"><span>CELEBRAR CON INTENCIÓN</span><b>Momentos que quedan</b></div>
+        <div class="hero-seal">LG<br><small>EVENTOS</small></div>
+      </div>
+      <div class="hero-vertical">LAURA GALINDO · ALQUILER DE MOBILIARIO</div>
+    </section>
+
+    <section class="catalog-section" id="catalogo">
+      <div class="section-heading">
+        <div><span class="eyebrow">PIEZAS PARA CADA MOMENTO</span><h2>Explora el catálogo</h2></div>
+        <p>Agrega tus favoritos a la canasta y cuéntanos sobre tu evento. Te confirmaremos precios y disponibilidad.</p>
+      </div>
+      <div class="catalog-tools">
+        <div class="category-scroll" id="categoryList" aria-label="Categorías del catálogo"></div>
+        <label class="search-box"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" placeholder="Buscar una pieza" aria-label="Buscar productos"></label>
+      </div>
+      <div class="catalog-meta"><span id="resultCount"></span><span>Precios y disponibilidad <b>por cotizar</b></span></div>
+      <div class="product-grid" id="productGrid"></div>
+      <div class="empty-state" id="emptyState" hidden><span>✳</span><h3>No encontramos esa pieza</h3><p>Prueba con otro nombre o elige una categoría.</p></div>
+    </section>
+
+    <section class="quote-banner" id="nosotros">
+      <div class="quote-flower">✳</div><div><span class="eyebrow">LAURA GALINDO EVENTOS</span><h2>Cada evento tiene<br>su propia historia.</h2><p>Somos una empresa familiar que pone el corazón en cada detalle.</p></div>
+      <a href="#catalogo" class="button button-light">Arma tu selección <span>↗</span></a>
+    </section>
+  </main>
+  <footer><a class="brand footer-brand" href="#inicio"><span class="brand-mark">LG</span><span class="brand-name">Laura Galindo <small>EVENTOS</small></span></a><span>Alquiler de mobiliario para celebrar a tu manera.</span><span>© <span id="year"></span> Laura Galindo Eventos</span></footer>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Mi canasta" aria-hidden="true">
+    <div class="drawer-head"><div><span class="eyebrow">TU SELECCIÓN</span><h2>Mi canasta <span id="drawerCount">(0)</span></h2></div><button class="icon-button" id="closeCart" aria-label="Cerrar canasta">×</button></div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-empty" id="cartEmpty"><span>✳</span><h3>Tu canasta está vacía</h3><p>Explora el catálogo y agrega las piezas que te gustan.</p><button class="text-button" id="continueShopping">Ver catálogo →</button></div>
+    <form class="quote-form" id="quoteForm" hidden>
+      <div class="form-divider"></div><p class="form-intro">Déjanos los datos de tu evento. Prepararemos tu solicitud para compartir por WhatsApp.</p>
+      <label>Tu nombre<input name="name" required autocomplete="name" placeholder="Nombre y apellido"></label>
+      <div class="form-row"><label>Fecha del evento<input name="date" type="date"></label><label>Ciudad<input name="city" placeholder="¿Dónde será?"></label></div>
+      <label>Cuéntanos un poco más<textarea name="notes" rows="2" placeholder="Tipo de evento, cantidades o detalles"></textarea></label>
+      <button class="button button-dark send-quote" type="submit">Solicitar cotización <span>↗</span></button>
+      <p class="contact-hint" id="contactHint"></p>
+    </form>
+    <div class="drawer-foot" id="drawerFoot"><p>Los precios y la disponibilidad se confirman de acuerdo con la fecha y los detalles de tu evento.</p><button class="button button-dark" id="startQuote" disabled>Continuar con mi solicitud <span>↗</span></button></div>
+  </aside>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="config.js"></script>
+  <script src="catalogo.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
