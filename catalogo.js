@@ -7,6 +7,16 @@ const categories = [
 ];
 
 const products = [];
+const imageOverrides = {
+  '11-1': 'assets/products/11-1.svg', '11-2': 'assets/products/11-2.svg',
+  '11-3': 'assets/products/11-3.svg', '11-5': 'assets/products/11-1.webp',
+  '19-2': 'assets/products/19-5.webp', '19-3': 'assets/products/19-2.webp',
+  '19-4': 'assets/products/19-3.webp', '19-5': 'assets/products/19-4.webp',
+  '20-4': 'assets/products/20-5.webp', '20-5': 'assets/products/20-4.webp',
+  '21-3': 'assets/products/21-4.webp', '21-4': 'assets/products/21-3.webp',
+  '22-2': 'assets/products/22-2.svg', '22-3': 'assets/products/22-3.svg',
+  '22-4': 'assets/products/22-3.webp'
+};
 const pageTitles = {
   3: 'Platos', 4: 'Bases de plato', 5: 'Copas y vasos', 6: 'Vasos', 7: 'Servicio de bebidas',
   8: 'Menaje', 9: 'Cubiertos', 10: 'Exhibidores de alimentos', 11: 'Exhibidores de alimentos',
@@ -29,13 +39,15 @@ const pageTitles = {
   69: 'Textiles de cilindros', 70: 'Textiles circulares'
 };
 const pageCounters = new Map();
-function add(page, names, category, sectionOverride = null) {
+function add(page, names, category, sectionOverride = null, itemIndexes = null) {
+  const pageOffset = pageCounters.get(page) || 0;
   names.forEach((name, i) => products.push({
-    id: `${page}-${(pageCounters.get(page) || 0) + i + 1}`, name, category, page,
+    id: `${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}`, name, category, page,
     sectionTitle: sectionOverride || pageTitles[page] || category,
-    image: `assets/products/${page}-${(pageCounters.get(page) || 0) + i + 1}.webp`
+    image: imageOverrides[`${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}`]
+      || `assets/products/${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}.webp`
   }));
-  pageCounters.set(page, (pageCounters.get(page) || 0) + names.length);
+  pageCounters.set(page, pageOffset + names.length);
 }
 
 add(3, ['Plato llano', 'Plato para torta'], 'Vajilla y cristalería');
@@ -53,7 +65,7 @@ add(13, ['Arco de corazón', 'Arco túnel', 'Arco dosel Backing', 'Arco armable'
 add(14, ['Estructura circular', 'Estructura mediana', 'Estructura expandible', 'Estructura grande'], 'Estructuras');
 add(15, ['Mampara grande', 'Mampara mediana', 'Mampara espejo'], 'Estructuras');
 add(16, ['Arco arcoíris 3D', 'Mampara arco blanco', 'Arcos blancos', 'Arco romano', 'Arco fondo arcoíris'], 'Estructuras');
-add(17, ['Backing ondulado 3D', 'Arco mixtilíneo', 'Telón arco 3D', 'Arco centro de rejilla', 'Pegboard', 'Arco cuadrado'], 'Estructuras');
+add(17, ['Backing ondulado 3D', 'Arco mixtilíneo', 'Telón arco 3D', 'Arco centro de rejilla pegboard', 'Arco cuadrado'], 'Estructuras', null, [1, 2, 3, 4, 6]);
 add(18, ['Arco cuadrado de escalera', 'Panel de madera', 'Arco café', 'Arco heptagonal', 'Marco selfie'], 'Estructuras');
 add(19, ['Bases blancas', 'Mesa bar rústica', 'Mesa Lira', 'Mesa torneada', 'Mesa pirámide'], 'Mesas y bases');
 add(20, ['Mesa plateada', 'Mesa cuadrada de vidrio', 'Mesa pasabocas · 3 divisiones', 'Carrosa para torta', 'Base de torta alta'], 'Mesas y bases');
