@@ -32,17 +32,51 @@ function renderProducts() {
       <div class="product-grid-inner">${group.items.map((item) => `
         <article class="product-card">
           <button class="product-image" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)} a la canasta">
-            <img src="${item.image}" alt="${escapeHTML(item.name)} del catálogo Laura Galindo Eventos" loading="lazy" onerror="this.closest('.product-image').classList.add('image-fallback');this.remove()">
+            ${catalogImage(item, `${escapeHTML(item.name)} del catálogo Laura Galindo Eventos`)}
             <span class="image-add">+ Agregar</span><span class="image-index">LG · ${String(item.page).padStart(2, '0')}</span>
           </button>
           <div class="product-info"><div><span class="product-category">${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3></div><button class="add-button" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)}">+</button></div>
           <div class="product-price">Precio y disponibilidad <span>Por cotizar</span></div>
         </article>`).join('')}</div>
     </section>`).join('');
+  initializeCroppedImages(grid);
 }
 
 function escapeHTML(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+}
+
+function catalogImage(item, alt) {
+  if (item.imageParts?.length === 1) {
+    return `<img src="${escapeHTML(item.imageParts[0])}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
+  }
+  if (item.imageParts?.length > 1) {
+    const columns = Math.ceil(Math.sqrt(item.imageParts.length));
+    const images = item.imageParts.map((src) => `<img src="${escapeHTML(src)}" alt="" loading="lazy" onerror="this.remove()">`).join('');
+    return `<span class="product-part-grid" role="img" aria-label="${alt}" style="--part-columns:${columns}">${images}</span>`;
+  }
+  if (item.imageCrop) {
+    const { x, y, width, height } = item.imageCrop;
+    return `<span class="product-crop-window"><canvas width="${width}" height="${height}" data-source="${escapeHTML(item.image)}" data-crop='{"x":${x},"y":${y},"width":${width},"height":${height}}' role="img" aria-label="${alt}"></canvas></span>`;
+  }
+  return `<img src="${escapeHTML(item.image)}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
+}
+
+function initializeCroppedImages(container) {
+  container.querySelectorAll('canvas[data-source]').forEach((canvas) => {
+    const image = new Image();
+    image.onload = () => {
+      const { x, y, width, height } = JSON.parse(canvas.dataset.crop);
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext('2d').drawImage(image, x, y, width, height, 0, 0, width, height);
+    };
+    image.onerror = () => {
+      canvas.closest('.product-image')?.classList.add('image-fallback');
+      canvas.remove();
+    };
+    image.src = canvas.dataset.source;
+  });
 }
 
 function saveCart() {
@@ -68,8 +102,9 @@ function renderCart() {
   $('#cartItems').innerHTML = [...cart.entries()].map(([id, quantity]) => {
     const item = products.find((product) => product.id === id);
     if (!item) return '';
-    return `<article class="cart-item"><div class="cart-thumb"><img src="${item.image}" alt="" onerror="this.remove()"></div><div class="cart-item-copy"><span>${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3><small>Precio por confirmar</small><div class="quantity-controls"><button data-quantity="${id}" data-change="-1" aria-label="Quitar una unidad">−</button><b>${quantity}</b><button data-quantity="${id}" data-change="1" aria-label="Agregar una unidad">+</button><button class="remove-item" data-remove="${id}">Eliminar</button></div></div></article>`;
+    return `<article class="cart-item"><div class="cart-thumb">${catalogImage(item, '')}</div><div class="cart-item-copy"><span>${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3><small>Precio por confirmar</small><div class="quantity-controls"><button data-quantity="${id}" data-change="-1" aria-label="Quitar una unidad">−</button><b>${quantity}</b><button data-quantity="${id}" data-change="1" aria-label="Agregar una unidad">+</button><button class="remove-item" data-remove="${id}">Eliminar</button></div></div></article>`;
   }).join('');
+  initializeCroppedImages($('#cartItems'));
 }
 
 function showToast(message) {

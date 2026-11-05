@@ -7,14 +7,40 @@ const categories = [
 ];
 
 const products = [];
+const imageParts = {
+  '32-2': [
+    'assets/products/32-number-0.webp', 'assets/products/32-number-1.webp', 'assets/products/32-number-2.webp',
+    'assets/products/32-number-3.webp', 'assets/products/32-number-4.webp', 'assets/products/32-number-6.webp',
+    'assets/products/32-number-7.webp', 'assets/products/32-number-8.webp', 'assets/products/32-number-9.webp'
+  ],
+  '33-1': ['assets/products/33-number-15.webp'],
+  '33-2': ['assets/products/33-number-1.webp', 'assets/products/33-number-5.webp']
+};
+const imageCrops = {
+  '11-1': { source: 'assets/products/11-3.webp', x: 30, y: 20, width: 410, height: 260 },
+  '11-2': { source: 'assets/products/11-3.webp', x: 65, y: 270, width: 350, height: 285 },
+  '11-3': { source: 'assets/products/11-3.webp', x: 420, y: 35, width: 475, height: 235 },
+  '22-2': { source: 'assets/products/22-2.webp', x: 465, y: 0, width: 435, height: 560 },
+  '22-3': { source: 'assets/products/22-2.webp', x: 0, y: 0, width: 465, height: 560 },
+  '36-1': { source: 'assets/products/36-1.webp', x: 0, y: 575, width: 720, height: 715 },
+  '49-3': { source: 'assets/products/49-3.webp', x: 0, y: 800, width: 648, height: 280 },
+  '43-3': { source: 'assets/products/43-7.webp', x: 60, y: 75, width: 120, height: 410 },
+  '43-4': { source: 'assets/products/43-7.webp', x: 170, y: 215, width: 130, height: 265 },
+  '43-5': { source: 'assets/products/43-7.webp', x: 290, y: 220, width: 105, height: 260 },
+  '43-6': { source: 'assets/products/43-7.webp', x: 380, y: 250, width: 95, height: 230 },
+  '43-7': { source: 'assets/products/43-7.webp', x: 460, y: 285, width: 95, height: 200 },
+  '43-8': { source: 'assets/products/43-7.webp', x: 540, y: 315, width: 95, height: 175 },
+  '43-9': { source: 'assets/products/43-7.webp', x: 625, y: 350, width: 85, height: 130 },
+  '43-10': { source: 'assets/products/43-7.webp', x: 695, y: 350, width: 90, height: 130 },
+  '43-11': { source: 'assets/products/43-7.webp', x: 775, y: 375, width: 65, height: 95 }
+};
 const imageOverrides = {
-  '11-1': 'assets/products/11-1.svg', '11-2': 'assets/products/11-2.svg',
-  '11-3': 'assets/products/11-3.svg', '11-5': 'assets/products/11-1.webp',
+  '11-5': 'assets/products/11-1.webp',
+  '33-4': 'assets/products/33-letters-isa.webp',
   '19-2': 'assets/products/19-5.webp', '19-3': 'assets/products/19-2.webp',
   '19-4': 'assets/products/19-3.webp', '19-5': 'assets/products/19-4.webp',
   '20-4': 'assets/products/20-5.webp', '20-5': 'assets/products/20-4.webp',
   '21-3': 'assets/products/21-4.webp', '21-4': 'assets/products/21-3.webp',
-  '22-2': 'assets/products/22-2.svg', '22-3': 'assets/products/22-3.svg',
   '22-4': 'assets/products/22-3.webp'
 };
 const pageTitles = {
@@ -41,12 +67,19 @@ const pageTitles = {
 const pageCounters = new Map();
 function add(page, names, category, sectionOverride = null, itemIndexes = null) {
   const pageOffset = pageCounters.get(page) || 0;
-  names.forEach((name, i) => products.push({
-    id: `${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}`, name, category, page,
-    sectionTitle: sectionOverride || pageTitles[page] || category,
-    image: imageOverrides[`${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}`]
-      || `assets/products/${page}-${itemIndexes?.[i] ?? pageOffset + i + 1}.webp`
-  }));
+  names.forEach((name, i) => {
+    const index = itemIndexes?.[i] ?? pageOffset + i + 1;
+    const id = `${page}-${index}`;
+    const crop = imageCrops[id];
+    const parts = imageParts[id] || null;
+    products.push({
+      id, name, category, page,
+      sectionTitle: sectionOverride || pageTitles[page] || category,
+      image: crop?.source || parts?.[0] || imageOverrides[id] || `assets/products/${id}.webp`,
+      imageParts: parts,
+      imageCrop: crop ? { x: crop.x, y: crop.y, width: crop.width, height: crop.height } : null
+    });
+  });
   pageCounters.set(page, pageOffset + names.length);
 }
 
