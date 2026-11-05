@@ -7,17 +7,42 @@ const categories = [
 ];
 
 const products = [];
-function add(page, names, category, firstImage = 0) {
+const pageTitles = {
+  3: 'Platos', 4: 'Bases de plato', 5: 'Copas y vasos', 6: 'Vasos', 7: 'Servicio de bebidas',
+  8: 'Menaje', 9: 'Cubiertos', 10: 'Exhibidores de alimentos', 11: 'Exhibidores de alimentos',
+  12: 'Estructuras de metal', 13: 'Estructuras de metal', 14: 'Estructuras', 15: 'Mamparas',
+  16: 'Estructuras de madera', 17: 'Estructuras de madera', 18: 'Estructuras de madera',
+  19: 'Mesas y bases', 20: 'Mesas y bases', 21: 'Mesas y bases', 22: 'Mesas y bases',
+  23: 'Mesas y bases', 24: 'Mesas y bases', 25: 'Mesas y bases', 26: 'Sillas y tronos',
+  27: 'Sillas y tronos', 28: 'Sillas', 29: 'Sillas tipo diván', 30: 'Sillas tipo diván',
+  31: 'Muebles de apoyo', 32: 'Letras y números', 33: 'Letras y números', 34: 'Estructuras LED',
+  35: 'Estructuras LED', 36: 'Letreros LED', 37: 'Letreros LED', 38: 'Letreros LED', 39: 'Letreros LED',
+  40: 'Chaimers', 41: 'Chaimers', 42: 'Estilos de portavelas', 43: 'Faroles y cilindros',
+  44: 'Centro de mesa', 45: 'Bases decorativas', 46: 'Accesorios de exhibición', 47: 'Lámparas',
+  48: 'Decoración de techo', 49: 'Decoración de techo', 50: 'Cofres de regalos',
+  51: 'Figuras y decoraciones', 52: 'Figuras y decoraciones', 53: 'Detalles temáticos',
+  54: 'Detalles temáticos', 55: 'Detalles temáticos', 56: 'Detalles temáticos',
+  57: 'Tortas decorativas', 58: 'Canastas y cestos', 59: 'Flores artificiales',
+  60: 'Flores artificiales', 61: 'Telas para mamparas', 62: 'Telas para mamparas',
+  63: 'Telas para mamparas', 64: 'Telas para mamparas', 65: 'Telas para mamparas',
+  66: 'Telas para mamparas', 67: 'Textiles de cilindros', 68: 'Textiles de cilindros',
+  69: 'Textiles de cilindros', 70: 'Textiles circulares'
+};
+const pageCounters = new Map();
+function add(page, names, category, sectionOverride = null) {
   names.forEach((name, i) => products.push({
-    id: `${page}-${i + 1}`, name, category, page,
-    image: `assets/catalog/p${String(page).padStart(2, '0')}-${String(firstImage + i + 1).padStart(2, '0')}.webp`
+    id: `${page}-${(pageCounters.get(page) || 0) + i + 1}`, name, category, page,
+    sectionTitle: sectionOverride || pageTitles[page] || category,
+    image: `assets/products/${page}-${(pageCounters.get(page) || 0) + i + 1}.webp`
   }));
+  pageCounters.set(page, (pageCounters.get(page) || 0) + names.length);
 }
 
 add(3, ['Plato llano', 'Plato para torta'], 'Vajilla y cristalería');
-add(4, ['Base de plato · modelo 1', 'Base de plato · modelo 2', 'Base de plato · modelo 3', 'Base de plato · modelo 4', 'Base de plato · modelo 5', 'Base de plato · modelo 6', 'Base de plato · modelo 7', 'Ensaladera'], 'Vajilla y cristalería');
-add(5, ['Copa de champán lisa', 'Copa de champán dorada', 'Copa de vino', 'Copa Margarita', 'Copa de cóctel'], 'Vajilla y cristalería');
-add(6, ['Vaso liso clásico', 'Vaso Rocks', 'Vaso Collins', 'Vaso Cubero', 'Vaso Buchón'], 'Vajilla y cristalería');
+add(4, ['Base de plato · modelo 1', 'Base de plato · modelo 2', 'Base de plato · modelo 3', 'Base de plato · modelo 4', 'Base de plato · modelo 5', 'Base de plato · modelo 6', 'Base de plato · modelo 7'], 'Vajilla y cristalería');
+add(4, ['Ensaladera · modelo 1', 'Ensaladera · modelo 2'], 'Vajilla y cristalería', 'Ensaladeras');
+add(5, ['Copa de champán (lisa y dorada)', 'Copa de vino', 'Copa Margarita', 'Copa de cóctel'], 'Vajilla y cristalería');
+add(6, ['Vaso liso clásico', 'Vaso Rocks', 'Vaso Collins', 'Vaso Cubero', 'Vaso Buchon'], 'Vajilla y cristalería');
 add(7, ['Jarras', 'Dispensadores', 'Hielera con pinzas', 'Soporte para copas'], 'Servicio y menaje');
 add(8, ['Samovares', 'Fuente de chocolate', 'Charolas'], 'Servicio y menaje');
 add(9, ['Cubiertos plateados', 'Cubiertos dorados'], 'Servicio y menaje');

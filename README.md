@@ -19,7 +19,7 @@ El número del negocio ya está configurado en `config.js`. El formulario redact
 
 - `index.html`, `styles.css`: estructura y diseño adaptable a móvil.
 - `catalogo.js`: categorías y nombres visibles en el PDF.
-- `assets/catalog`: imágenes de producto extraídas del catálogo.
+- `assets/products`: imágenes transparentes agrupadas por pieza desde el catálogo.
 - `config.js`: nombre del negocio y número de WhatsApp para cotizaciones.
 
 El PDF original se conserva en la carpeta de trabajo y se omite del repositorio para no subir el archivo de 78 MB. El repositorio original y su imagen se conservan.

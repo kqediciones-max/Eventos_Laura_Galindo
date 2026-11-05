@@ -19,15 +19,26 @@ function renderProducts() {
   const visible = filteredProducts();
   $('#resultCount').textContent = `${visible.length} ${visible.length === 1 ? 'pieza' : 'piezas'}`;
   $('#emptyState').hidden = visible.length > 0;
-  grid.innerHTML = visible.map((item) => `
-    <article class="product-card">
-      <button class="product-image" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)} a la canasta">
-        <img src="${item.image}" alt="${escapeHTML(item.name)} del catálogo Laura Galindo Eventos" loading="lazy" onerror="this.closest('.product-image').classList.add('image-fallback');this.remove()">
-        <span class="image-add">+ Agregar</span><span class="image-index">LG · ${String(item.page).padStart(2, '0')}</span>
-      </button>
-      <div class="product-info"><div><span class="product-category">${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3></div><button class="add-button" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)}">+</button></div>
-      <div class="product-price">Precio y disponibilidad <span>Por cotizar</span></div>
-    </article>`).join('');
+  const groups = [];
+  for (const item of visible) {
+    const title = item.sectionTitle || item.category;
+    const key = `${item.category}:${title}`;
+    if (!groups.length || groups.at(-1).key !== key) groups.push({ key, title, items: [] });
+    groups.at(-1).items.push(item);
+  }
+  grid.innerHTML = groups.map((group) => `
+    <section class="product-section">
+      <div class="product-section-heading"><h3>${escapeHTML(group.title)}</h3><span>${group.items.length} ${group.items.length === 1 ? 'pieza' : 'piezas'}</span></div>
+      <div class="product-grid-inner">${group.items.map((item) => `
+        <article class="product-card">
+          <button class="product-image" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)} a la canasta">
+            <img src="${item.image}" alt="${escapeHTML(item.name)} del catálogo Laura Galindo Eventos" loading="lazy" onerror="this.closest('.product-image').classList.add('image-fallback');this.remove()">
+            <span class="image-add">+ Agregar</span><span class="image-index">LG · ${String(item.page).padStart(2, '0')}</span>
+          </button>
+          <div class="product-info"><div><span class="product-category">${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3></div><button class="add-button" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)}">+</button></div>
+          <div class="product-price">Precio y disponibilidad <span>Por cotizar</span></div>
+        </article>`).join('')}</div>
+    </section>`).join('');
 }
 
 function escapeHTML(value) {
