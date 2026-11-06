@@ -2,6 +2,12 @@ const $ = (selector) => document.querySelector(selector);
 const grid = $('#productGrid');
 const categoryList = $('#categoryList');
 const cart = new Map(JSON.parse(localStorage.getItem('lg-eventos-cart') || '[]'));
+const eventOptions = [
+  { id: 'event-bodas', name: 'Bodas', category: 'Cotización de eventos', image: 'assets/hero-event.jpg' },
+  { id: 'event-sociales', name: 'Eventos sociales', category: 'Cotización de eventos', image: 'assets/events/carrito-de-torta.jpg' },
+  { id: 'event-corporativos', name: 'Eventos corporativos', category: 'Cotización de eventos', image: 'assets/events/mesa-cristaleria.jpg' },
+  { id: 'event-quince', name: 'Quince años', category: 'Cotización de eventos', image: 'assets/events/ambientacion-quince.jpg' }
+];
 let activeCategory = 'Todo';
 let toastTimer;
 let previewTrigger = null;
@@ -101,11 +107,22 @@ function saveCart() {
   renderCart();
 }
 
+function quoteItem(id) {
+  return products.find((product) => product.id === id) || eventOptions.find((eventOption) => eventOption.id === id);
+}
+
 function addToCart(id) {
+  const item = quoteItem(id);
+  if (!item) return;
   cart.set(id, (cart.get(id) || 0) + 1);
   saveCart();
-  const item = products.find((product) => product.id === id);
   showToast(`${item.name} agregado a tu canasta`);
+}
+
+function addEventToCart(id) {
+  addToCart(id);
+  setDrawer(true);
+  $('#quoteForm [name="name"]').focus();
 }
 
 function renderCart() {
@@ -117,7 +134,7 @@ function renderCart() {
   $('#drawerFoot').hidden = count === 0;
   $('#startQuote').disabled = count === 0;
   $('#cartItems').innerHTML = [...cart.entries()].map(([id, quantity]) => {
-    const item = products.find((product) => product.id === id);
+    const item = quoteItem(id);
     if (!item) return '';
     return `<article class="cart-item"><div class="cart-thumb">${catalogImage(item, '')}</div><div class="cart-item-copy"><span>${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3><small>Precio por confirmar</small><div class="quantity-controls"><label for="quantity-${id}">Cantidad</label><input id="quantity-${id}" class="quantity-input" type="number" min="1" step="1" inputmode="numeric" value="${quantity}" data-quantity="${id}" aria-label="Cantidad de ${escapeHTML(item.name)}"><button class="remove-item" data-remove="${id}">Eliminar</button></div></div></article>`;
   }).join('');
@@ -142,7 +159,7 @@ function setDrawer(open) {
 
 function quoteMessage(formData) {
   const lines = [...cart.entries()].map(([id, quantity]) => {
-    const item = products.find((product) => product.id === id);
+    const item = quoteItem(id);
     return item ? `• ${quantity} × ${item.name} (${item.category})` : null;
   }).filter(Boolean);
   const details = [
@@ -182,6 +199,10 @@ grid.addEventListener('click', (event) => {
   }
   const button = event.target.closest('[data-add]');
   if (button) addToCart(button.dataset.add);
+});
+$('#eventTypes').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-event-add]');
+  if (button) addEventToCart(button.dataset.eventAdd);
 });
 $('#closeImagePreview').addEventListener('click', () => $('#imagePreview').close());
 $('#imagePreview').addEventListener('click', (event) => {
