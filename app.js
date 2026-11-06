@@ -114,9 +114,10 @@ function quoteItem(id) {
 function addToCart(id) {
   const item = quoteItem(id);
   if (!item) return;
-  cart.set(id, (cart.get(id) || 0) + 1);
+  const quantity = (cart.get(id) || 0) + 1;
+  cart.set(id, quantity);
   saveCart();
-  showToast(`${item.name} agregado a tu canasta`);
+  showToast(`Agregado: ${item.name} · ${quantity} ${quantity === 1 ? 'unidad' : 'unidades'} en tu canasta`);
 }
 
 function addEventToCart(id) {
@@ -146,7 +147,7 @@ function showToast(message) {
   toast.textContent = message;
   toast.classList.add('visible');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2400);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 3600);
 }
 
 function setDrawer(open) {
