@@ -48,18 +48,19 @@ function escapeHTML(value) {
 
 function catalogImage(item, alt) {
   if (item.imageParts?.length === 1) {
-    return `<img src="${escapeHTML(item.imageParts[0])}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
+    return `<img class="${item.imageFlipped ? 'is-flipped' : ''}" src="${escapeHTML(item.imageParts[0])}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
   }
   if (item.imageParts?.length > 1) {
-    const columns = Math.ceil(Math.sqrt(item.imageParts.length));
+    const columns = item.imageParts.length === 2 ? 2 : Math.ceil(Math.sqrt(item.imageParts.length));
+    const rows = Math.ceil(item.imageParts.length / columns);
     const images = item.imageParts.map((src) => `<img src="${escapeHTML(src)}" alt="" loading="lazy" onerror="this.remove()">`).join('');
-    return `<span class="product-part-grid" role="img" aria-label="${alt}" style="--part-columns:${columns}">${images}</span>`;
+    return `<span class="product-part-grid ${item.imageParts.length === 2 ? 'is-pair' : ''}" role="img" aria-label="${alt}" style="--part-columns:${columns};--part-rows:${rows}">${images}</span>`;
   }
   if (item.imageCrop) {
-    const { x, y, width, height } = item.imageCrop;
-    return `<span class="product-crop-window"><canvas width="${width}" height="${height}" data-source="${escapeHTML(item.image)}" data-crop='{"x":${x},"y":${y},"width":${width},"height":${height}}' role="img" aria-label="${alt}"></canvas></span>`;
+    const { x, y, width, height, targetWidth = width, targetHeight = height } = item.imageCrop;
+    return `<span class="product-crop-window"><canvas width="${targetWidth}" height="${targetHeight}" data-source="${escapeHTML(item.image)}" data-crop='{"x":${x},"y":${y},"width":${width},"height":${height}}' role="img" aria-label="${alt}"></canvas></span>`;
   }
-  return `<img src="${escapeHTML(item.image)}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
+  return `<img class="${item.imageFlipped ? 'is-flipped' : ''}" src="${escapeHTML(item.image)}" alt="${alt}" loading="lazy" onerror="this.closest('.product-image')?.classList.add('image-fallback');this.remove()">`;
 }
 
 function initializeCroppedImages(container) {
@@ -67,9 +68,12 @@ function initializeCroppedImages(container) {
     const image = new Image();
     image.onload = () => {
       const { x, y, width, height } = JSON.parse(canvas.dataset.crop);
-      canvas.width = width;
-      canvas.height = height;
-      canvas.getContext('2d').drawImage(image, x, y, width, height, 0, 0, width, height);
+      const scale = Math.min(canvas.width / width, canvas.height / height);
+      const drawWidth = width * scale;
+      const drawHeight = height * scale;
+      const offsetX = (canvas.width - drawWidth) / 2;
+      const offsetY = (canvas.height - drawHeight) / 2;
+      canvas.getContext('2d').drawImage(image, x, y, width, height, offsetX, offsetY, drawWidth, drawHeight);
     };
     image.onerror = () => {
       canvas.closest('.product-image')?.classList.add('image-fallback');

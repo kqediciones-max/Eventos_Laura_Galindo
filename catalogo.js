@@ -14,7 +14,8 @@ const imageParts = {
     'assets/products/32-number-7.webp', 'assets/products/32-number-8.webp', 'assets/products/32-number-9.webp'
   ],
   '33-1': ['assets/products/33-number-15.webp'],
-  '33-2': ['assets/products/33-number-1.webp', 'assets/products/33-number-5.webp']
+  '33-2': ['assets/products/33-number-1.webp', 'assets/products/33-number-5.webp'],
+  '37-1': ['assets/products/37-1.webp', 'assets/products/37-2.webp']
 };
 const imageCrops = {
   '11-1': { source: 'assets/products/11-3.webp', x: 30, y: 20, width: 410, height: 260 },
@@ -22,20 +23,35 @@ const imageCrops = {
   '11-3': { source: 'assets/products/11-3.webp', x: 420, y: 35, width: 475, height: 235 },
   '22-2': { source: 'assets/products/22-2.webp', x: 465, y: 0, width: 435, height: 560 },
   '22-3': { source: 'assets/products/22-2.webp', x: 0, y: 0, width: 465, height: 560 },
-  '36-1': { source: 'assets/products/36-1.webp', x: 0, y: 575, width: 720, height: 715 },
-  '49-3': { source: 'assets/products/49-3.webp', x: 0, y: 800, width: 648, height: 280 },
-  '43-3': { source: 'assets/products/43-7.webp', x: 60, y: 75, width: 120, height: 410 },
-  '43-4': { source: 'assets/products/43-7.webp', x: 170, y: 215, width: 130, height: 265 },
-  '43-5': { source: 'assets/products/43-7.webp', x: 290, y: 220, width: 105, height: 260 },
-  '43-6': { source: 'assets/products/43-7.webp', x: 380, y: 250, width: 95, height: 230 },
-  '43-7': { source: 'assets/products/43-7.webp', x: 460, y: 285, width: 95, height: 200 },
-  '43-8': { source: 'assets/products/43-7.webp', x: 540, y: 315, width: 95, height: 175 },
-  '43-9': { source: 'assets/products/43-7.webp', x: 625, y: 350, width: 85, height: 130 },
-  '43-10': { source: 'assets/products/43-7.webp', x: 695, y: 350, width: 90, height: 130 },
-  '43-11': { source: 'assets/products/43-7.webp', x: 775, y: 375, width: 65, height: 95 }
+  '43-3': { source: 'assets/products/43-7.webp', x: 60, y: 75, width: 120, height: 410, targetWidth: 220, targetHeight: 380 },
+  '43-4': { source: 'assets/products/43-7.webp', x: 170, y: 215, width: 130, height: 265, targetWidth: 220, targetHeight: 380 },
+  '43-5': { source: 'assets/products/43-7.webp', x: 290, y: 220, width: 105, height: 260, targetWidth: 220, targetHeight: 380 },
+  '43-6': { source: 'assets/products/43-7.webp', x: 380, y: 250, width: 95, height: 230, targetWidth: 220, targetHeight: 380 },
+  '43-7': { source: 'assets/products/43-7.webp', x: 460, y: 285, width: 95, height: 200, targetWidth: 220, targetHeight: 380 },
+  '43-8': { source: 'assets/products/43-7.webp', x: 540, y: 315, width: 95, height: 175, targetWidth: 220, targetHeight: 380 },
+  '43-9': { source: 'assets/products/43-7.webp', x: 625, y: 350, width: 85, height: 130, targetWidth: 220, targetHeight: 380 },
+  '43-10': { source: 'assets/products/43-7.webp', x: 695, y: 350, width: 90, height: 130, targetWidth: 220, targetHeight: 380 },
+  '43-11': { source: 'assets/products/43-7.webp', x: 775, y: 375, width: 65, height: 95, targetWidth: 220, targetHeight: 380 }
 };
 const imageOverrides = {
   '11-5': 'assets/products/11-1.webp',
+  '24-2': 'assets/products/24-3.webp', '24-3': 'assets/products/24-2.webp',
+  '25-2': 'assets/products/25-5.webp', '25-3': 'assets/products/25-2.webp',
+  '25-4': 'assets/products/25-3.webp', '25-5': 'assets/products/25-4.webp',
+  '32-1': 'assets/products/32-numeros-mini-sin-cero.png',
+  '34-2': 'assets/products/34-platforma-estilo-torta.png',
+  '35-4': 'assets/products/35-un-amor-por-siempre.png',
+  '36-1': 'assets/products/36-mr-and-mrs.png',
+  '37-2': 'assets/products/37-4.webp',
+  '38-2': 'assets/products/38-3.webp', '38-3': 'assets/products/38-2.webp',
+  '42-3': 'assets/products/42-candelabro-copa-dorada.png',
+  '44-2': 'assets/products/44-busto-david.png', '44-3': 'assets/products/44-florero-copa.png',
+  '44-4': 'assets/products/44-3.webp',
+  '49-3': 'assets/products/49-decoracion-techo-7.png',
+  '50-1': 'assets/products/50-2.webp', '50-2': 'assets/products/50-1.webp',
+  '53-2': 'assets/products/53-caja-fantasia.png',
+  '60-1': 'assets/products/60-claveles.png',
+  '67-2': 'assets/products/67-textil-cilindro-2.png',
   '33-4': 'assets/products/33-letters-isa.webp',
   '19-2': 'assets/products/19-5.webp', '19-3': 'assets/products/19-2.webp',
   '19-4': 'assets/products/19-3.webp', '19-5': 'assets/products/19-4.webp',
@@ -43,6 +59,7 @@ const imageOverrides = {
   '21-3': 'assets/products/21-4.webp', '21-4': 'assets/products/21-3.webp',
   '22-4': 'assets/products/22-3.webp'
 };
+const imageFlips = new Set(['54-2']);
 const pageTitles = {
   3: 'Platos', 4: 'Bases de plato', 5: 'Copas y vasos', 6: 'Vasos', 7: 'Servicio de bebidas',
   8: 'Menaje', 9: 'Cubiertos', 10: 'Exhibidores de alimentos', 11: 'Exhibidores de alimentos',
@@ -77,7 +94,8 @@ function add(page, names, category, sectionOverride = null, itemIndexes = null) 
       sectionTitle: sectionOverride || pageTitles[page] || category,
       image: crop?.source || parts?.[0] || imageOverrides[id] || `assets/products/${id}.webp`,
       imageParts: parts,
-      imageCrop: crop ? { x: crop.x, y: crop.y, width: crop.width, height: crop.height } : null
+      imageCrop: crop ? { x: crop.x, y: crop.y, width: crop.width, height: crop.height, targetWidth: crop.targetWidth, targetHeight: crop.targetHeight } : null,
+      imageFlipped: imageFlips.has(id)
     });
   });
   pageCounters.set(page, pageOffset + names.length);
@@ -118,7 +136,7 @@ add(33, ['Número grande LED · modelo 1', 'Número grande LED · modelo 2', 'N�
 add(34, ['Plataforma', 'Plataforma estilo torta', 'Plataforma grande', 'Mariposa LED'], 'Letras y LED');
 add(35, ['Estrella LED', 'Alas LED', 'Corazón LED', 'Un amor por siempre', 'Felices por siempre'], 'Letras y LED');
 add(36, ['Mr & Mrs', 'Feliz día', 'Mi primera comunión', 'Mi grado', 'Mi bautizo'], 'Letras y LED');
-add(37, ['Nuestra boda', 'Happy Birthday', 'Mis 15', 'Quince', 'Love'], 'Letras y LED');
+add(37, ['Nuestra boda', 'Happy Birthday', 'Mis 15 Quince', 'Love'], 'Letras y LED', null, [1, 2, 3, 5]);
 add(38, ['Feliz día', 'Let’s Party', 'Sofía', 'Mi grado', 'Forma de corazón'], 'Letras y LED');
 add(39, ['Tatiana', 'Juliana', 'Oh Baby'], 'Letras y LED');
 add(40, ['Chaimers morado', 'Chaimers rosa palo', 'Chaimers plateado', 'Chaimers negro con brillos', 'Chaimers tornasol'], 'Iluminación');
