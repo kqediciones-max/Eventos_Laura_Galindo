@@ -173,12 +173,20 @@ $('#cartItems').addEventListener('change', (event) => {
   if (!input) return;
   const id = input.dataset.quantity;
   const next = Number(input.value);
-  if (Number.isInteger(next) && next > 0) cart.set(id, next);
-  saveCart();
+  if (!Number.isInteger(next) || next < 1) {
+    input.value = cart.get(id) || 1;
+    return;
+  }
+  cart.set(id, next);
+  localStorage.setItem('lg-eventos-cart', JSON.stringify([...cart]));
+  const count = [...cart.values()].reduce((sum, quantity) => sum + quantity, 0);
+  $('#cartCount').textContent = count;
+  $('#drawerCount').textContent = `(${count})`;
 });
 $('#cartItems').addEventListener('click', (event) => {
   const remove = event.target.closest('[data-remove]');
-  if (remove) cart.delete(remove.dataset.remove);
+  if (!remove) return;
+  cart.delete(remove.dataset.remove);
   saveCart();
 });
 
