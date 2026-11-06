@@ -114,6 +114,11 @@
     </form>
     <div class="drawer-foot" id="drawerFoot"><p>Los precios y la disponibilidad se confirman de acuerdo con la fecha y los detalles de tu evento.</p><button class="button button-dark" id="startQuote" disabled>Continuar con mi solicitud <span>↗</span></button></div>
   </aside>
+  <dialog class="image-preview-dialog" id="imagePreview" aria-labelledby="previewTitle">
+    <button class="image-preview-close" type="button" id="closeImagePreview" aria-label="Cerrar vista previa">×</button>
+    <div class="image-preview-content" id="imagePreviewContent"></div>
+    <div class="image-preview-caption"><span id="previewCategory"></span><h2 id="previewTitle"></h2></div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="config.js"></script>
   <script src="catalogo.js"></script>

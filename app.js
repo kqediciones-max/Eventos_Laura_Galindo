@@ -4,6 +4,7 @@ const categoryList = $('#categoryList');
 const cart = new Map(JSON.parse(localStorage.getItem('lg-eventos-cart') || '[]'));
 let activeCategory = 'Todo';
 let toastTimer;
+let previewTrigger = null;
 
 const eventWhatsAppNumber = (window.CATALOG_CONFIG.whatsappNumber || '').replace(/\D/g, '');
 const eventWhatsAppText = 'Hola, quiero cotizar la planeación de un evento a mi medida. Cuéntame cómo podemos organizarlo.';
@@ -42,10 +43,11 @@ function renderProducts() {
       <div class="product-section-heading"><h3>${escapeHTML(group.title)}</h3><span>${group.items.length} ${group.items.length === 1 ? 'pieza' : 'piezas'}</span></div>
       <div class="product-grid-inner">${group.items.map((item) => `
         <article class="product-card">
-          <button class="product-image" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)} a la canasta">
+          <div class="product-image">
             ${catalogImage(item, `${escapeHTML(item.name)} del catálogo Laura Galindo Eventos`)}
-            <span class="image-add">+ Agregar</span><span class="image-index">LG · ${String(item.page).padStart(2, '0')}</span>
-          </button>
+            <span class="image-index">LG · ${String(item.page).padStart(2, '0')}</span>
+            <div class="image-actions"><button class="image-preview-trigger" type="button" data-preview="${item.id}" aria-label="Ver imagen de ${escapeHTML(item.name)}">Vista previa</button><button class="image-add" type="button" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)} a la canasta">+ Agregar</button></div>
+          </div>
           <div class="product-info"><div><span class="product-category">${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3></div><button class="add-button" data-add="${item.id}" aria-label="Agregar ${escapeHTML(item.name)}">+</button></div>
           <div class="product-price">Precio y disponibilidad <span>Por cotizar</span></div>
         </article>`).join('')}</div>
@@ -165,8 +167,29 @@ categoryList.addEventListener('click', (event) => {
 
 $('#searchInput').addEventListener('input', renderProducts);
 grid.addEventListener('click', (event) => {
+  const preview = event.target.closest('[data-preview]');
+  if (preview) {
+    const item = products.find((product) => product.id === preview.dataset.preview);
+    if (!item) return;
+    previewTrigger = preview;
+    $('#previewCategory').textContent = item.category;
+    $('#previewTitle').textContent = item.name;
+    $('#imagePreviewContent').innerHTML = `<div class="product-image preview-image-stage">${catalogImage(item, `${escapeHTML(item.name)} del catálogo Laura Galindo Eventos`)}</div>`;
+    initializeCroppedImages($('#imagePreviewContent'));
+    $('#imagePreview').showModal();
+    $('#closeImagePreview').focus();
+    return;
+  }
   const button = event.target.closest('[data-add]');
   if (button) addToCart(button.dataset.add);
+});
+$('#closeImagePreview').addEventListener('click', () => $('#imagePreview').close());
+$('#imagePreview').addEventListener('click', (event) => {
+  if (event.target === $('#imagePreview')) $('#imagePreview').close();
+});
+$('#imagePreview').addEventListener('close', () => {
+  previewTrigger?.focus();
+  previewTrigger = null;
 });
 $('#cartItems').addEventListener('change', (event) => {
   const input = event.target.closest('[data-quantity]');

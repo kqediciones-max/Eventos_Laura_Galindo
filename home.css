@@ -33,4 +33,20 @@ footer .instagram-link{display:inline-flex;align-items:center;gap:8px;color:var(
 .instagram-link svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .instagram-link .instagram-dot{fill:currentColor;stroke:none}
 .instagram-link:hover{color:#a4877d}
+.image-actions{position:absolute;z-index:3;right:10px;bottom:10px;display:flex;gap:6px;align-items:center}
+.image-actions .image-add,.image-preview-trigger{position:static;opacity:1;transform:none;border:1px solid #e7ded4;border-radius:2px;padding:8px 10px;background:#fffdf9;color:#51483f;font:500 9px var(--sans);box-shadow:0 2px 9px #0000000c;cursor:pointer}
+.image-actions .image-add{background:var(--green);border-color:var(--green);color:#fff}
+.image-actions button:hover{filter:brightness(.96)}
+.product-image{cursor:default}
+.image-preview-dialog{position:fixed;inset:50% auto auto 50%;transform:translate(-50%,-50%);margin:0;border:1px solid #e8ded4;padding:22px;width:min(94vw,1080px);max-width:none;max-height:94dvh;overflow:auto;background:#fffdfa;color:var(--ink);box-shadow:0 24px 80px #20180f33}
+.image-preview-dialog::backdrop{background:#211d19b8;backdrop-filter:blur(3px)}
+.image-preview-content .product-image{width:100%;height:min(68vh,700px);min-height:260px;padding:20px;background:#f6f2eb;cursor:default}
+.image-preview-content .product-image:after{display:none}
+.image-preview-content .product-image img{transition:none}
+.image-preview-content .product-image .product-part-grid{inset:16px}
+.image-preview-close{position:absolute;z-index:4;right:10px;top:10px;width:36px;height:36px;border:1px solid #e4d9ce;border-radius:50%;background:#fffdfa;color:#51483f;font:300 24px/1 var(--sans);cursor:pointer}
+.image-preview-caption{padding:14px 2px 0}
+.image-preview-caption span{color:#9b8c74;font:600 9px var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.image-preview-caption h2{margin:5px 0 0;font:500 21px var(--serif)}
+@media(max-width:700px){.image-actions{right:7px;bottom:7px;gap:4px}.image-actions .image-add,.image-preview-trigger{padding:7px 8px;font-size:8px}.image-preview-dialog{padding:13px;width:calc(100vw - 22px)}.image-preview-content .product-image{height:min(65vh,620px);min-height:210px;padding:13px}.image-preview-close{right:6px;top:6px;width:32px;height:32px}.image-preview-caption h2{font-size:18px}}
 @media(max-width:700px){footer .instagram-link{order:3;width:calc(50% - 8px)}footer>span:last-child{order:4}}
