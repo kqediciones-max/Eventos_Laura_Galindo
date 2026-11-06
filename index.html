@@ -95,17 +95,19 @@
   <div class="drawer-backdrop" id="drawerBackdrop"></div>
   <aside class="cart-drawer" id="cartDrawer" aria-label="Mi canasta" aria-hidden="true">
     <div class="drawer-head"><div><span class="eyebrow">TU SELECCIÓN</span><h2>Mi canasta <span id="drawerCount">(0)</span></h2></div><button class="icon-button" id="closeCart" aria-label="Cerrar canasta">×</button></div>
-    <div class="cart-items" id="cartItems"></div>
-    <div class="cart-empty" id="cartEmpty"><span>✳</span><h3>Tu canasta está vacía</h3><p>Explora el catálogo y agrega las piezas que te gustan.</p><button class="text-button" id="continueShopping">Ver catálogo →</button></div>
-    <form class="quote-form" id="quoteForm" hidden>
-      <div class="form-divider"></div><p class="form-intro">Déjanos los datos de tu evento. Prepararemos tu solicitud para compartir por WhatsApp.</p>
-      <label>Tu nombre<input name="name" required autocomplete="name" placeholder="Nombre y apellido"></label>
-      <div class="form-row"><label>Fecha del evento<input name="date" type="date"></label><label>Ciudad<input name="city" placeholder="¿Dónde será?"></label></div>
-      <label>Cuéntanos un poco más<textarea name="notes" rows="2" placeholder="Tipo de evento, cantidades o detalles"></textarea></label>
-      <button class="button button-dark send-quote" type="submit">Solicitar cotización <span>↗</span></button>
-      <p class="contact-hint" id="contactHint"></p>
-    </form>
-    <div class="drawer-foot" id="drawerFoot"><p>Los precios y la disponibilidad se confirman de acuerdo con la fecha y los detalles de tu evento.</p><button class="button button-dark" id="startQuote" disabled>Continuar con mi solicitud <span>↗</span></button></div>
+    <div class="cart-flow" id="cartFlow">
+      <div class="cart-items" id="cartItems"></div>
+      <div class="cart-empty" id="cartEmpty"><span>✳</span><h3>Tu canasta está vacía</h3><p>Explora el catálogo y agrega las piezas que te gustan.</p><button class="text-button" id="continueShopping">Ver catálogo →</button></div>
+      <form class="quote-form" id="quoteForm" hidden>
+        <div class="form-divider"></div><p class="form-intro">Déjanos los datos de tu evento. Prepararemos tu solicitud para compartir por WhatsApp.</p>
+        <label>Tu nombre<input name="name" required autocomplete="name" placeholder="Nombre y apellido"></label>
+        <div class="form-row"><label>Fecha del evento<input name="date" type="date"></label><label>Ciudad<input name="city" placeholder="¿Dónde será?"></label></div>
+        <label>Cuéntanos un poco más<textarea name="notes" rows="2" placeholder="Tipo de evento, cantidades o detalles"></textarea></label>
+        <p class="form-intro">Confirmaremos precios y disponibilidad según la fecha y los detalles de tu evento.</p>
+        <button class="button button-dark send-quote" type="submit">Solicitar cotización y disponibilidad <span>↗</span></button>
+        <p class="contact-hint" id="contactHint"></p>
+      </form>
+    </div>
   </aside>
   <dialog class="image-preview-dialog" id="imagePreview" aria-labelledby="previewTitle">
     <button class="image-preview-close" type="button" id="closeImagePreview" aria-label="Cerrar vista previa">×</button>

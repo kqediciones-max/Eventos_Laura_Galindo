@@ -92,3 +92,21 @@ footer .instagram-link{display:inline-flex;align-items:center;gap:8px;color:var(
 @media(prefers-reduced-motion:reduce){.event-type-image img,.event-type-image:after,.event-quote-button{transition:none}}
 .toast{z-index:40;padding:14px 22px;font-size:12px;font-weight:500;line-height:1.5;max-width:min(560px,calc(100vw - 32px));border:1px solid #ffffff33;background:#49323a;box-shadow:0 8px 28px #25151b44}
 @media(max-width:700px){.toast{width:max-content;max-width:calc(100vw - 28px);font-size:11px;padding:12px 16px}}
+
+/* Canasta: un único recorrido para productos, datos y envío */
+.cart-drawer{overflow:hidden;min-height:0;padding-bottom:max(22px,env(safe-area-inset-bottom))}
+.drawer-head{flex:0 0 auto}
+.cart-flow{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable;padding-bottom:8px}
+.cart-items{flex:0 0 auto;overflow:visible}
+.cart-item{min-width:0}
+.cart-item-copy{min-width:0}
+.cart-item-copy h3{overflow-wrap:anywhere}
+.cart-empty{margin:34px auto}
+.quote-form{flex:0 0 auto;padding:17px 0 8px}
+.form-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.form-row label,.quote-form label{min-width:0}
+.quote-form input,.quote-form textarea{width:100%;min-width:0}
+.quote-form .form-intro{margin:0 0 13px}
+.send-quote{justify-content:center;gap:10px;min-height:52px;white-space:normal;text-align:center}
+#drawerFoot{display:none!important}
+@media(max-width:700px){.cart-drawer{padding:calc(20px + env(safe-area-inset-top)) 19px max(18px,env(safe-area-inset-bottom))}.cart-flow{overscroll-behavior-y:contain;scrollbar-width:thin}.cart-items{overflow:visible}.cart-item{grid-template-columns:minmax(74px,27%) minmax(0,1fr);gap:12px;padding:15px 0}.cart-thumb{height:clamp(82px,22vw,108px)}.cart-item-copy h3{font-size:14px;line-height:1.3}.quantity-controls{flex-wrap:wrap;gap:8px}.form-row{grid-template-columns:minmax(0,1fr);gap:0}.quote-form input,.quote-form textarea{font-size:16px;padding:12px}.quote-form label{margin:12px 0}.send-quote{position:static;line-height:1.35;padding:11px 14px}.quote-form{padding-bottom:18px}}

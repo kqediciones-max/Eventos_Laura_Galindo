@@ -123,7 +123,6 @@ function addToCart(id) {
 function addEventToCart(id) {
   addToCart(id);
   setDrawer(true);
-  $('#quoteForm [name="name"]').focus();
 }
 
 function renderCart() {
@@ -132,8 +131,6 @@ function renderCart() {
   $('#drawerCount').textContent = `(${count})`;
   $('#cartEmpty').hidden = count > 0;
   $('#quoteForm').hidden = count === 0;
-  $('#drawerFoot').hidden = count === 0;
-  $('#startQuote').disabled = count === 0;
   $('#cartItems').innerHTML = [...cart.entries()].map(([id, quantity]) => {
     const item = quoteItem(id);
     if (!item) return '';
@@ -155,7 +152,10 @@ function setDrawer(open) {
   $('#drawerBackdrop').classList.toggle('open', open);
   $('#cartDrawer').setAttribute('aria-hidden', String(!open));
   document.body.classList.toggle('drawer-open', open);
-  if (open) $('#closeCart').focus();
+  if (open) {
+    $('#cartFlow').scrollTop = 0;
+    $('#closeCart').focus();
+  }
 }
 
 function quoteMessage(formData) {
@@ -169,7 +169,7 @@ function quoteMessage(formData) {
     formData.get('date') ? `Fecha del evento: ${formData.get('date')}` : null,
     formData.get('city') ? `Ciudad: ${formData.get('city')}` : null,
     formData.get('notes') ? `Detalles: ${formData.get('notes')}` : null,
-    '', 'Piezas seleccionadas:', ...lines, '',
+    '', 'Selección para cotizar:', ...lines, '',
     'Por favor, confírmenme precios y disponibilidad. ¡Gracias!'
   ];
   return details.filter((line) => line !== null).join('\n');
@@ -239,7 +239,6 @@ $('#openCart').addEventListener('click', () => setDrawer(true));
 $('#closeCart').addEventListener('click', () => setDrawer(false));
 $('#drawerBackdrop').addEventListener('click', () => setDrawer(false));
 $('#continueShopping').addEventListener('click', () => setDrawer(false));
-$('#startQuote').addEventListener('click', () => $('#quoteForm [name="name"]').focus());
 $('#quoteForm').addEventListener('submit', async (event) => {
   event.preventDefault();
   const message = quoteMessage(new FormData(event.currentTarget));
