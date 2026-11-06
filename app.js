@@ -3,10 +3,10 @@ const grid = $('#productGrid');
 const categoryList = $('#categoryList');
 const cart = new Map(JSON.parse(localStorage.getItem('lg-eventos-cart') || '[]'));
 const eventOptions = [
-  { id: 'event-bodas', name: 'Bodas', category: 'Cotización de eventos', image: 'assets/hero-event.jpg' },
-  { id: 'event-sociales', name: 'Eventos sociales', category: 'Cotización de eventos', image: 'assets/events/carrito-de-torta.jpg' },
-  { id: 'event-corporativos', name: 'Eventos corporativos', category: 'Cotización de eventos', image: 'assets/events/mesa-cristaleria.jpg' },
-  { id: 'event-quince', name: 'Quince años', category: 'Cotización de eventos', image: 'assets/events/ambientacion-quince.jpg' }
+  { id: 'event-bodas', name: 'Bodas', category: 'Cotización de eventos', image: 'assets/events/bodas.png' },
+  { id: 'event-sociales', name: 'Eventos sociales', category: 'Cotización de eventos', image: 'assets/events/eventos-sociales.png' },
+  { id: 'event-corporativos', name: 'Eventos corporativos', category: 'Cotización de eventos', image: 'assets/events/eventos-corporativos.png' },
+  { id: 'event-quince', name: 'Quince años', category: 'Cotización de eventos', image: 'assets/events/quince-anos.png' }
 ];
 let activeCategory = 'Todo';
 let toastTimer;
