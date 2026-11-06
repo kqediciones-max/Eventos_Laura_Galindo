@@ -110,3 +110,17 @@ footer .instagram-link{display:inline-flex;align-items:center;gap:8px;color:var(
 .send-quote{justify-content:center;gap:10px;min-height:52px;white-space:normal;text-align:center}
 #drawerFoot{display:none!important}
 @media(max-width:700px){.cart-drawer{padding:calc(20px + env(safe-area-inset-top)) 19px max(18px,env(safe-area-inset-bottom))}.cart-flow{overscroll-behavior-y:contain;scrollbar-width:thin}.cart-items{overflow:visible}.cart-item{grid-template-columns:minmax(74px,27%) minmax(0,1fr);gap:12px;padding:15px 0}.cart-thumb{height:clamp(82px,22vw,108px)}.cart-item-copy h3{font-size:14px;line-height:1.3}.quantity-controls{flex-wrap:wrap;gap:8px}.form-row{grid-template-columns:minmax(0,1fr);gap:0}.quote-form input,.quote-form textarea{font-size:16px;padding:12px}.quote-form label{margin:12px 0}.send-quote{position:static;line-height:1.35;padding:11px 14px}.quote-form{padding-bottom:18px}}
+
+/* Franja institucional coordinada con la portada rosa-malva */
+.quote-banner{position:relative;isolation:isolate;overflow:hidden;min-height:250px;padding:68px max(12vw,32px);gap:9vw;background:linear-gradient(118deg,#f1d9dc 0%,#e6d4e4 56%,#d7c7df 100%);color:#542a3a}
+.quote-banner:after{z-index:-1;border-color:#875e731f;box-shadow:0 0 0 28px #875e7309,0 0 0 58px #875e7306}
+.quote-banner>div,.quote-banner>.button{z-index:2}
+.quote-banner .eyebrow{color:#754455}
+.quote-banner h2{color:#542a3a}
+.quote-banner p{color:#684b58}
+.quote-banner .button.button-light{background:#fffaf6;color:#5d2e40;border:1px solid #c8a8b6;box-shadow:0 4px 15px #72495812}
+.quote-banner .button.button-light:hover{background:#fff;color:#4c2033;transform:translateY(-1px)}
+.quote-sprig{position:absolute;z-index:1;width:clamp(130px,18vw,240px);height:auto;opacity:.58;pointer-events:none}
+.quote-sprig-left{left:0;bottom:-10px}
+.quote-sprig-right{right:3%;top:-24px;transform:rotate(180deg);opacity:.42}
+@media(max-width:700px){.quote-banner{min-height:0;padding:48px 25px 50px}.quote-banner:after{right:-290px;top:-260px}.quote-sprig{width:125px;opacity:.3}.quote-sprig-left{left:-12px;bottom:-18px}.quote-sprig-right{right:-12px;top:-30px}.quote-banner>div{position:relative}.quote-banner .button{position:relative;margin-top:20px}}
