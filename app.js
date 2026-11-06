@@ -5,6 +5,17 @@ const cart = new Map(JSON.parse(localStorage.getItem('lg-eventos-cart') || '[]')
 let activeCategory = 'Todo';
 let toastTimer;
 
+const eventWhatsAppNumber = (window.CATALOG_CONFIG.whatsappNumber || '').replace(/\D/g, '');
+const eventWhatsAppText = 'Hola, quiero cotizar la planeación de un evento a mi medida. Cuéntame cómo podemos organizarlo.';
+document.querySelectorAll('[data-event-quote]').forEach((link) => {
+  if (eventWhatsAppNumber) {
+    link.href = `https://wa.me/${eventWhatsAppNumber}?text=${encodeURIComponent(eventWhatsAppText)}`;
+  } else {
+    link.href = '#catalogo';
+    link.removeAttribute('target');
+  }
+});
+
 function renderCategories() {
   categoryList.innerHTML = categories.map((category) => `<button class="category-chip ${category === activeCategory ? 'active' : ''}" data-category="${escapeHTML(category)}">${escapeHTML(category)}</button>`).join('');
 }

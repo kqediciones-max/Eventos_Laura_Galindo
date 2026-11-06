@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kqediciones-max.github.io/Eventos_Laura_Galindo/sitemap.xml
