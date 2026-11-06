@@ -117,7 +117,7 @@ function renderCart() {
   $('#cartItems').innerHTML = [...cart.entries()].map(([id, quantity]) => {
     const item = products.find((product) => product.id === id);
     if (!item) return '';
-    return `<article class="cart-item"><div class="cart-thumb">${catalogImage(item, '')}</div><div class="cart-item-copy"><span>${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3><small>Precio por confirmar</small><div class="quantity-controls"><button data-quantity="${id}" data-change="-1" aria-label="Quitar una unidad">−</button><b>${quantity}</b><button data-quantity="${id}" data-change="1" aria-label="Agregar una unidad">+</button><button class="remove-item" data-remove="${id}">Eliminar</button></div></div></article>`;
+    return `<article class="cart-item"><div class="cart-thumb">${catalogImage(item, '')}</div><div class="cart-item-copy"><span>${escapeHTML(item.category)}</span><h3>${escapeHTML(item.name)}</h3><small>Precio por confirmar</small><div class="quantity-controls"><label for="quantity-${id}">Cantidad</label><input id="quantity-${id}" class="quantity-input" type="number" min="1" step="1" inputmode="numeric" value="${quantity}" data-quantity="${id}" aria-label="Cantidad de ${escapeHTML(item.name)}"><button class="remove-item" data-remove="${id}">Eliminar</button></div></div></article>`;
   }).join('');
   initializeCroppedImages($('#cartItems'));
 }
@@ -168,15 +168,17 @@ grid.addEventListener('click', (event) => {
   const button = event.target.closest('[data-add]');
   if (button) addToCart(button.dataset.add);
 });
+$('#cartItems').addEventListener('change', (event) => {
+  const input = event.target.closest('[data-quantity]');
+  if (!input) return;
+  const id = input.dataset.quantity;
+  const next = Number(input.value);
+  if (Number.isInteger(next) && next > 0) cart.set(id, next);
+  saveCart();
+});
 $('#cartItems').addEventListener('click', (event) => {
   const remove = event.target.closest('[data-remove]');
   if (remove) cart.delete(remove.dataset.remove);
-  const control = event.target.closest('[data-quantity]');
-  if (control) {
-    const id = control.dataset.quantity;
-    const next = (cart.get(id) || 0) + Number(control.dataset.change);
-    if (next <= 0) cart.delete(id); else cart.set(id, next);
-  }
   saveCart();
 });
 
