@@ -22,7 +22,9 @@ El acceso del panel está en `/admin.html`. La sesión se firma en el servidor y
 
 - Revisa solicitudes recibidas, sus datos de evento y productos seleccionados.
 - Crea una cotización nueva o desde una solicitud, agregando productos del catálogo, cantidades, precios, comentarios y datos del cliente.
+- Decide si aplica un impuesto por cotización: IVA del 5%, IVA del 19% o impuesto al consumo del 8%. Si no seleccionas un impuesto, el documento no muestra una fila de impuestos.
 - Guarda la cotización para conservarla en el historial.
+- Elimina cotizaciones del historial; si una solicitud ya no tiene cotizaciones vinculadas, vuelve a quedar pendiente.
 - **Ver cotización** abre una vista previa formal dentro del panel. Desde allí puedes imprimir o elegir “Guardar como PDF”. El formato incluye el logo, NIT, teléfonos, dirección, datos del cliente, validez, detalle, totales, condiciones comerciales y espacios de firma.
 - Abre WhatsApp para enviar el archivo descargado al cliente.
 

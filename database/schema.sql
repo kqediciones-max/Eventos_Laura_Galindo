@@ -31,6 +31,9 @@ create table if not exists public.quotes (
   discount_amount bigint not null default 0 check (discount_amount >= 0),
   iva_percent numeric(5,2) not null default 0 check (iva_percent between 0 and 100),
   iva_amount bigint not null default 0 check (iva_amount >= 0),
+  tax_type text not null default '',
+  tax_percent numeric(5,2) not null default 0 check (tax_percent between 0 and 100),
+  tax_amount bigint not null default 0 check (tax_amount >= 0),
   total bigint not null check (total >= 0),
   payment_method text not null default '',
   deposit text not null default '',
@@ -48,6 +51,9 @@ alter table public.quotes add column if not exists discount_percent numeric(5,2)
 alter table public.quotes add column if not exists discount_amount bigint not null default 0;
 alter table public.quotes add column if not exists iva_percent numeric(5,2) not null default 0;
 alter table public.quotes add column if not exists iva_amount bigint not null default 0;
+alter table public.quotes add column if not exists tax_type text not null default '';
+alter table public.quotes add column if not exists tax_percent numeric(5,2) not null default 0;
+alter table public.quotes add column if not exists tax_amount bigint not null default 0;
 alter table public.quotes add column if not exists payment_method text not null default '';
 alter table public.quotes add column if not exists deposit text not null default '';
 
@@ -59,7 +65,7 @@ revoke all on public.quotes from anon, authenticated;
 grant all on public.quote_requests to service_role;
 grant all on public.quotes to service_role;
 
-create or replace function public.admin_create_quote_v2(
+create or replace function public.admin_create_quote_v3(
   p_request_id uuid,
   p_quote_number text,
   p_recipient_name text,
@@ -77,6 +83,9 @@ create or replace function public.admin_create_quote_v2(
   p_discount_amount bigint,
   p_iva_percent numeric,
   p_iva_amount bigint,
+  p_tax_type text,
+  p_tax_percent numeric,
+  p_tax_amount bigint,
   p_total bigint,
   p_payment_method text,
   p_deposit text,
@@ -93,12 +102,14 @@ begin
     request_id, quote_number, recipient_name, phone, customer_document,
     email, event_name, event_date, city, validity_days, comments, items,
     subtotal, discount_percent, discount_amount, iva_percent, iva_amount,
+    tax_type, tax_percent, tax_amount,
     total, payment_method, deposit, created_by
   ) values (
     p_request_id, p_quote_number, p_recipient_name, coalesce(p_phone, ''),
     coalesce(p_customer_document, ''), coalesce(p_email, ''), coalesce(p_event_name, ''),
     p_event_date, coalesce(p_city, ''), p_validity_days, coalesce(p_comments, ''),
     p_items, p_subtotal, p_discount_percent, p_discount_amount, p_iva_percent, p_iva_amount,
+    coalesce(p_tax_type, ''), p_tax_percent, p_tax_amount,
     p_total, coalesce(p_payment_method, ''), coalesce(p_deposit, ''), p_created_by
   ) returning * into saved_quote;
 
@@ -112,5 +123,5 @@ begin
 end;
 $$;
 
-revoke all on function public.admin_create_quote_v2(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) from public, anon, authenticated;
-grant execute on function public.admin_create_quote_v2(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) to service_role;
+revoke all on function public.admin_create_quote_v3(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, text, numeric, bigint, bigint, text, text, text) from public, anon, authenticated;
+grant execute on function public.admin_create_quote_v3(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, text, numeric, bigint, bigint, text, text, text) to service_role;

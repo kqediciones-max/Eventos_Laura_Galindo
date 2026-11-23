@@ -54,3 +54,13 @@
   #quotePreviewDialog .print-document{display:block!important;width:100%!important;min-height:0!important;margin:0!important;padding:0!important;box-shadow:none!important}
   #quotePreviewDialog .print-lines tr,.print-info-box,.print-observations,.print-totals,.print-commercial,.print-signatures{break-inside:avoid}
 }
+
+/* Herramientas del historial y selección de impuestos */
+.quote-card-actions{display:flex;flex:0 0 auto;gap:6px;align-items:center}
+.quote-card-actions .admin-button{min-height:32px;padding:0 10px;font-size:9px}
+.tax-controls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:end;padding:12px;border:1px solid #e9dfe1;background:#fdf9f8}
+.tax-toggle{display:flex!important;align-items:center;gap:9px;min-height:42px}
+.tax-toggle input{display:inline-block!important;width:17px!important;height:17px;margin:0!important;accent-color:#652e43}
+#taxTypeField[hidden]{display:none!important}
+.print-tax-note{margin-top:5px!important;font:italic 7pt Arial,sans-serif!important;color:#6c5b63}
+@media(max-width:600px){.quote-card-actions{flex-direction:column;align-items:stretch}.quote-card-actions button{width:100%}.tax-controls{grid-template-columns:1fr}}

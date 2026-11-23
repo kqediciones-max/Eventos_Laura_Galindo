@@ -5,7 +5,13 @@ function normalizeQuote(body, admin) {
   const recipientName = safeText(body?.recipientName, 160);
   const items = Array.isArray(body?.items) ? body.items : [];
   const discountPercent = Number(body?.discountPercent ?? 0);
-  const ivaPercent = Number(body?.ivaPercent ?? 0);
+  const taxType = safeText(body?.taxType, 20);
+  const taxOptions = {
+    iva_5: { label: 'IVA 5%', percent: 5 },
+    iva_19: { label: 'IVA 19%', percent: 19 },
+    consumo_8: { label: 'Impuesto al consumo 8%', percent: 8 }
+  };
+  const tax = taxType ? taxOptions[taxType] : null;
   const validityDays = Number(body?.validityDays ?? 30);
   if (!recipientName || items.length < 1 || items.length > 80) return null;
 
@@ -23,10 +29,12 @@ function normalizeQuote(body, admin) {
   });
   if (normalizedItems.some((item) => !item.id || !item.name || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 999 || !Number.isFinite(item.unitPrice) || item.unitPrice < 0 || item.unitPrice > 1_000_000_000)) return null;
   const subtotal = normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-  if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100 || !Number.isFinite(ivaPercent) || ivaPercent < 0 || ivaPercent > 100 || !Number.isInteger(validityDays) || validityDays < 1 || validityDays > 365) return null;
+  if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100 || (taxType && !tax) || !Number.isInteger(validityDays) || validityDays < 1 || validityDays > 365) return null;
   const discountAmount = Math.round(subtotal * discountPercent / 100);
-  const ivaAmount = Math.round((subtotal - discountAmount) * ivaPercent / 100);
-  const total = subtotal - discountAmount + ivaAmount;
+  const taxPercent = tax?.percent || 0;
+  const taxAmount = Math.round((subtotal - discountAmount) * taxPercent / 100);
+  const isIva = taxType.startsWith('iva_');
+  const total = subtotal - discountAmount + taxAmount;
   if (!Number.isFinite(total) || total > 10_000_000_000) return null;
 
   const now = new Date();
@@ -47,8 +55,11 @@ function normalizeQuote(body, admin) {
     p_subtotal: Math.round(subtotal),
     p_discount_percent: discountPercent,
     p_discount_amount: discountAmount,
-    p_iva_percent: ivaPercent,
-    p_iva_amount: ivaAmount,
+    p_iva_percent: isIva ? taxPercent : 0,
+    p_iva_amount: isIva ? taxAmount : 0,
+    p_tax_type: taxType,
+    p_tax_percent: taxPercent,
+    p_tax_amount: taxAmount,
     p_total: Math.round(total),
     p_payment_method: safeText(body?.paymentMethod, 240),
     p_deposit: safeText(body?.deposit, 240),
@@ -89,11 +100,29 @@ export default async function handler(req, res) {
     }
   }
 
+  if (body?.action === 'delete-quote') {
+    const quoteId = safeText(body.quoteId, 40);
+    if (!/^[0-9a-f-]{36}$/i.test(quoteId)) return sendJson(res, 400, { error: 'Identificador de cotización no válido.' });
+    try {
+      const existing = await supabaseRequest('quotes', 'GET', undefined, `?select=request_id&id=eq.${quoteId}&limit=1`);
+      if (!existing?.length) return sendJson(res, 404, { error: 'No se encontró la cotización.' });
+      await supabaseRequest(`quotes?id=eq.${quoteId}`, 'DELETE');
+      const requestId = existing[0].request_id;
+      if (requestId) {
+        const remaining = await supabaseRequest('quotes', 'GET', undefined, `?select=id&request_id=eq.${requestId}&limit=1`);
+        if (!remaining?.length) await supabaseRequest(`quote_requests?id=eq.${requestId}`, 'PATCH', { status: 'pending', updated_at: new Date().toISOString() });
+      }
+      return sendJson(res, 200, { ok: true });
+    } catch {
+      return sendJson(res, 503, { error: 'No se pudo eliminar la cotización.' });
+    }
+  }
+
   if (body?.action !== 'create-quote') return sendJson(res, 400, { error: 'Acción no válida.' });
   const quote = normalizeQuote(body, admin);
   if (!quote) return sendJson(res, 400, { error: 'Revisa el destinatario y las líneas de la cotización.' });
   try {
-    const rows = await supabaseRequest('rpc/admin_create_quote_v2', 'POST', quote);
+    const rows = await supabaseRequest('rpc/admin_create_quote_v3', 'POST', quote);
     return sendJson(res, 201, { quote: rows });
   } catch {
     return sendJson(res, 503, { error: 'No se pudo guardar la cotización.' });

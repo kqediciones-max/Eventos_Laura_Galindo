@@ -173,12 +173,21 @@ function renderQuotes() {
     const details = document.createElement('p');
     details.textContent = `${quote.quote_number} · ${money.format(Number(quote.total) || 0)} · ${formatDate(quote.created_at)}`;
     copy.append(title, details);
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'admin-button admin-button-outline';
-    button.textContent = 'Ver PDF';
-    button.addEventListener('click', () => printQuote(quote));
-    card.append(copy, button);
+    const actions = document.createElement('div');
+    actions.className = 'quote-card-actions';
+    const viewButton = document.createElement('button');
+    viewButton.type = 'button';
+    viewButton.className = 'admin-button admin-button-outline';
+    viewButton.textContent = 'Ver PDF';
+    viewButton.addEventListener('click', () => printQuote(quote));
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'admin-button admin-button-quiet';
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.setAttribute('aria-label', `Eliminar cotización ${quote.quote_number}`);
+    deleteButton.addEventListener('click', () => deleteQuote(quote));
+    actions.append(viewButton, deleteButton);
+    card.append(copy, actions);
     list.append(card);
   }
 }
@@ -186,6 +195,18 @@ function renderQuotes() {
 function renderLists() {
   renderRequests();
   renderQuotes();
+}
+
+async function deleteQuote(quote) {
+  if (!window.confirm(`¿Eliminar la cotización ${quote.quote_number} de ${quote.recipient_name}?`)) return;
+  try {
+    await api('/api/admin', { method: 'POST', body: JSON.stringify({ action: 'delete-quote', quoteId: quote.id }) });
+    quoteRows = quoteRows.filter((row) => row.id !== quote.id);
+    renderQuotes();
+    feedback($('#pageFeedback'), `Se eliminó la cotización ${quote.quote_number}.`);
+  } catch (error) {
+    feedback($('#pageFeedback'), error.message, true);
+  }
 }
 
 async function updateRequestStatus(row, status) {
@@ -282,15 +303,28 @@ function updateTotal() {
   }
   const discount = Math.round(subtotal * (Number(quoteBuilder.elements.discountPercent.value) || 0) / 100);
   const taxable = Math.max(0, subtotal - discount);
-  const iva = Math.round(taxable * (Number(quoteBuilder.elements.ivaPercent.value) || 0) / 100);
-  $('#quoteTotal').textContent = money.format(taxable + iva);
+  const taxRates = { iva_5: 5, iva_19: 19, consumo_8: 8 };
+  const taxPercent = quoteBuilder.elements.includeTaxes.checked ? (taxRates[quoteBuilder.elements.taxType.value] || 0) : 0;
+  const taxAmount = Math.round(taxable * taxPercent / 100);
+  $('#quoteTotal').textContent = money.format(taxable + taxAmount);
 }
+
+quoteBuilder.elements.includeTaxes.addEventListener('change', () => {
+  const enabled = quoteBuilder.elements.includeTaxes.checked;
+  $('#taxTypeField').hidden = !enabled;
+  quoteBuilder.elements.taxType.disabled = !enabled;
+  if (!enabled) quoteBuilder.elements.taxType.value = '';
+  updateTotal();
+});
+quoteBuilder.elements.taxType.addEventListener('change', updateTotal);
 
 $('#addLineButton').addEventListener('click', () => addQuoteLine());
 $('#newQuoteButton').addEventListener('click', () => resetQuoteBuilder());
 
 function resetQuoteBuilder() {
   quoteBuilder.reset();
+  $('#taxTypeField').hidden = true;
+  quoteBuilder.elements.taxType.disabled = true;
   quoteLines.replaceChildren();
   quoteBuilder.elements.requestId.value = '';
   addQuoteLine();
@@ -335,6 +369,10 @@ quoteBuilder.addEventListener('submit', async (event) => {
     feedback($('#quoteFeedback'), 'Elige un producto para cada línea.', true);
     return;
   }
+  if (quoteBuilder.elements.includeTaxes.checked && !quoteBuilder.elements.taxType.value) {
+    feedback($('#quoteFeedback'), 'Selecciona IVA 5%, IVA 19% o impuesto al consumo 8%.', true);
+    return;
+  }
   const data = {
     action: 'create-quote',
     requestId: quoteBuilder.elements.requestId.value || null,
@@ -348,7 +386,7 @@ quoteBuilder.addEventListener('submit', async (event) => {
     validityDays: Number(quoteBuilder.elements.validityDays.value),
     comments: quoteBuilder.elements.comments.value,
     discountPercent: Number(quoteBuilder.elements.discountPercent.value),
-    ivaPercent: Number(quoteBuilder.elements.ivaPercent.value),
+    taxType: quoteBuilder.elements.includeTaxes.checked ? quoteBuilder.elements.taxType.value : '',
     paymentMethod: quoteBuilder.elements.paymentMethod.value,
     deposit: quoteBuilder.elements.deposit.value,
     items
@@ -392,8 +430,13 @@ function renderPrintDocument(quote) {
   $('#printSubtotal').textContent = money.format(subtotal);
   $('#printDiscountPercent').textContent = String(Number(quote.discount_percent) || 0);
   $('#printDiscount').textContent = money.format(Number(quote.discount_amount) || 0);
-  $('#printIvaPercent').textContent = String(Number(quote.iva_percent) || 0);
-  $('#printIva').textContent = money.format(Number(quote.iva_amount) || 0);
+  const legacyIvaPercent = Number(quote.iva_percent) || 0;
+  const taxType = quote.tax_type || (legacyIvaPercent ? 'iva_legacy' : '');
+  const taxNames = { iva_5: 'IVA 5%', iva_19: 'IVA 19%', consumo_8: 'Impuesto al consumo 8%' };
+  $('#printTaxRow').hidden = !taxType;
+  $('#printTaxAmount').hidden = !taxType;
+  $('#printTaxLabel').textContent = taxNames[taxType] || (taxType === 'iva_legacy' ? `IVA ${legacyIvaPercent}%` : '');
+  $('#printTaxAmount').textContent = money.format(Number(quote.tax_amount ?? quote.iva_amount) || 0);
   $('#printTotal').textContent = money.format(Number(quote.total) || 0);
   $('#printPaymentMethod').textContent = quote.payment_method || 'Por acordar';
   $('#printDeposit').textContent = quote.deposit || 'Por acordar';

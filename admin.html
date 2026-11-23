@@ -51,7 +51,8 @@
             <div class="line-heading"><div><span class="admin-eyebrow">DETALLE</span><h3>Productos y servicios</h3></div><button class="admin-button admin-button-outline" id="addLineButton" type="button">+ Agregar ítem</button></div>
             <div class="quote-lines" id="quoteLines"></div>
             <label>Comentarios para la propuesta<textarea name="comments" rows="3" placeholder="Alcance, condiciones o información adicional"></textarea></label>
-            <div class="form-grid quote-terms-grid"><label>Descuento (%)<input name="discountPercent" type="number" min="0" max="100" step="0.01" value="0"></label><label>IVA (%) según aplique<input name="ivaPercent" type="number" min="0" max="100" step="0.01" value="19"></label><label>Forma de pago<input name="paymentMethod" placeholder="Ej. Transferencia / efectivo"></label><label>Anticipo para reserva<input name="deposit" placeholder="Ej. 50% para reservar"></label></div>
+            <div class="form-grid quote-terms-grid"><label>Descuento (%)<input name="discountPercent" type="number" min="0" max="100" step="0.01" value="0"></label><label>Forma de pago<input name="paymentMethod" placeholder="Ej. Transferencia / efectivo"></label><label>Anticipo para reserva<input name="deposit" placeholder="Ej. 50% para reservar"></label></div>
+            <div class="tax-controls"><label class="tax-toggle"><input name="includeTaxes" type="checkbox"> Agregar impuesto a esta cotización</label><label id="taxTypeField" hidden>Selecciona el impuesto<select name="taxType" disabled><option value="">Elige una opción</option><option value="iva_5">IVA tarifa 5%</option><option value="iva_19">IVA tarifa 19%</option><option value="consumo_8">Impuesto al consumo 8%</option></select></label></div>
             <div class="quote-total"><span>Total de la cotización</span><strong id="quoteTotal">$ 0</strong></div>
             <button class="admin-button admin-button-primary" type="submit" id="saveQuoteButton">Guardar cotización</button>
             <p class="admin-feedback" id="quoteFeedback" role="status" aria-live="polite"></p>
@@ -75,11 +76,11 @@
       <table class="print-lines"><thead><tr><th>Ítem</th><th>Descripción del producto / servicio</th><th>Cantidad</th><th>Unidad</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody id="printItems"></tbody></table>
       <div class="print-bottom-grid">
         <section class="print-observations" id="printCommentsSection"><h3>OBSERVACIONES</h3><p id="printComments"></p></section>
-        <section class="print-totals"><dl><dt>Subtotal</dt><dd id="printSubtotal"></dd><dt>Descuento (<span id="printDiscountPercent"></span>%)</dt><dd id="printDiscount"></dd><dt>IVA (<span id="printIvaPercent"></span>%)</dt><dd id="printIva"></dd></dl><div class="print-grand-total"><span>TOTAL</span><strong id="printTotal"></strong></div></section>
+        <section class="print-totals"><dl><dt>Subtotal</dt><dd id="printSubtotal"></dd><dt>Descuento (<span id="printDiscountPercent"></span>%)</dt><dd id="printDiscount"></dd><dt id="printTaxRow" hidden><span id="printTaxLabel"></span></dt><dd id="printTaxAmount" hidden></dd></dl><div class="print-grand-total"><span>TOTAL</span><strong id="printTotal"></strong></div></section>
       </div>
       <section class="print-commercial"><h3>CONDICIONES COMERCIALES</h3><dl><dt>Forma de pago:</dt><dd id="printPaymentMethod"></dd><dt>Anticipo para reserva:</dt><dd id="printDeposit"></dd></dl></section>
       <section class="print-signatures"><div><strong>Laura Galindo</strong><span>Casa de Eventos Laura Galindo</span></div><div><strong>Aceptación del cliente</strong><span id="printSignatureName">Nombre, firma y fecha</span></div></section>
-      <footer class="print-footer"><p>¡Gracias por permitirnos ser parte de tu celebración!</p></footer>
+      <footer class="print-footer"><p>¡Gracias por permitirnos ser parte de tu celebración!</p><p class="print-tax-note">Valores sujetos a variación o aplicación de impuestos.</p></footer>
     </article>
   </dialog>
 
