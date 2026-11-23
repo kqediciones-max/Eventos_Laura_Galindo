@@ -276,11 +276,14 @@ function selectedCatalogItem(select) {
 }
 
 function updateTotal() {
-  let total = 0;
+  let subtotal = 0;
   for (const line of quoteLines.querySelectorAll('.quote-line')) {
-    total += Math.max(0, Number($('[data-field="quantity"]', line).value) || 0) * Math.max(0, Number($('[data-field="price"]', line).value) || 0);
+    subtotal += Math.max(0, Number($('[data-field="quantity"]', line).value) || 0) * Math.max(0, Number($('[data-field="price"]', line).value) || 0);
   }
-  $('#quoteTotal').textContent = money.format(total);
+  const discount = Math.round(subtotal * (Number(quoteBuilder.elements.discountPercent.value) || 0) / 100);
+  const taxable = Math.max(0, subtotal - discount);
+  const iva = Math.round(taxable * (Number(quoteBuilder.elements.ivaPercent.value) || 0) / 100);
+  $('#quoteTotal').textContent = money.format(taxable + iva);
 }
 
 $('#addLineButton').addEventListener('click', () => addQuoteLine());
@@ -337,9 +340,17 @@ quoteBuilder.addEventListener('submit', async (event) => {
     requestId: quoteBuilder.elements.requestId.value || null,
     recipientName: quoteBuilder.elements.recipientName.value,
     phone: quoteBuilder.elements.phone.value,
+    customerDocument: quoteBuilder.elements.customerDocument.value,
+    email: quoteBuilder.elements.email.value,
+    eventName: quoteBuilder.elements.eventName.value,
     eventDate: quoteBuilder.elements.eventDate.value,
     city: quoteBuilder.elements.city.value,
+    validityDays: Number(quoteBuilder.elements.validityDays.value),
     comments: quoteBuilder.elements.comments.value,
+    discountPercent: Number(quoteBuilder.elements.discountPercent.value),
+    ivaPercent: Number(quoteBuilder.elements.ivaPercent.value),
+    paymentMethod: quoteBuilder.elements.paymentMethod.value,
+    deposit: quoteBuilder.elements.deposit.value,
     items
   };
   const button = $('#saveQuoteButton');
@@ -365,36 +376,61 @@ function renderPrintDocument(quote) {
   $('#printQuoteNumber').textContent = quote.quote_number;
   $('#printCreatedAt').textContent = `Fecha de emisión: ${formatDate(quote.created_at || new Date().toISOString())}`;
   $('#printRecipient').textContent = quote.recipient_name || '';
+  $('#printCustomerDocument').textContent = quote.customer_document || '—';
+  $('#printPhone').textContent = quote.phone || '—';
+  $('#printEmail').textContent = quote.email || '—';
+  $('#printEventName').textContent = quote.event_name || '—';
   $('#printEventDate').textContent = formatDate(quote.event_date);
   $('#printCity').textContent = quote.city || 'Por confirmar';
+  const validityDays = Number(quote.validity_days) || 30;
+  $('#printValidity').textContent = `${validityDays} días`;
+  const issued = new Date(`${(quote.created_at || new Date().toISOString()).slice(0, 10)}T12:00:00`);
+  issued.setDate(issued.getDate() + validityDays);
+  $('#printValidUntil').textContent = formatDate(issued.toISOString().slice(0, 10));
+  const computedSubtotal = (quote.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
+  const subtotal = Number(quote.subtotal) || computedSubtotal;
+  $('#printSubtotal').textContent = money.format(subtotal);
+  $('#printDiscountPercent').textContent = String(Number(quote.discount_percent) || 0);
+  $('#printDiscount').textContent = money.format(Number(quote.discount_amount) || 0);
+  $('#printIvaPercent').textContent = String(Number(quote.iva_percent) || 0);
+  $('#printIva').textContent = money.format(Number(quote.iva_amount) || 0);
   $('#printTotal').textContent = money.format(Number(quote.total) || 0);
+  $('#printPaymentMethod').textContent = quote.payment_method || 'Por acordar';
+  $('#printDeposit').textContent = quote.deposit || 'Por acordar';
+  $('#printSignatureName').textContent = quote.recipient_name || 'Nombre, firma y fecha';
   $('#printComments').textContent = quote.comments || '';
   $('#printCommentsSection').hidden = !quote.comments;
   const tbody = $('#printItems');
   tbody.replaceChildren();
-  for (const item of quote.items || []) {
+  for (const [index, item] of (quote.items || []).entries()) {
     const tr = document.createElement('tr');
+    const number = document.createElement('td'); number.textContent = String(index + 1);
     const description = document.createElement('td');
     description.className = 'line-description';
-    description.textContent = `${item.name} · ${item.category}`;
+    description.textContent = `${item.name}${item.category ? ` · ${item.category}` : ''}`;
     if (item.comment) {
       const small = document.createElement('small');
       small.textContent = item.comment;
       description.append(small);
     }
     const quantity = document.createElement('td'); quantity.textContent = String(item.quantity);
-    const unit = document.createElement('td'); unit.textContent = money.format(Number(item.unitPrice) || 0);
+    const unit = document.createElement('td'); unit.textContent = 'Unid.';
+    const unitPrice = document.createElement('td'); unitPrice.textContent = money.format(Number(item.unitPrice) || 0);
     const total = document.createElement('td'); total.textContent = money.format((Number(item.quantity) || 0) * (Number(item.unitPrice) || 0));
-    tr.append(description, quantity, unit, total); tbody.append(tr);
+    tr.append(number, description, quantity, unit, unitPrice, total); tbody.append(tr);
   }
 }
 
 function printQuote(quote) {
+  lastSavedQuote = quote;
   renderPrintDocument(quote);
-  window.print();
+  $('#quotePreviewDialog').showModal();
 }
 
-$('#downloadPdfButton').addEventListener('click', () => { if (lastSavedQuote) printQuote(lastSavedQuote); });
+$('#viewQuoteButton').addEventListener('click', () => { if (lastSavedQuote) printQuote(lastSavedQuote); });
+$('#closeQuotePreview').addEventListener('click', () => $('#quotePreviewDialog').close());
+$('#quotePreviewDialog').addEventListener('click', (event) => { if (event.target === $('#quotePreviewDialog')) $('#quotePreviewDialog').close(); });
+$('#downloadPdfButton').addEventListener('click', () => { if (lastSavedQuote) window.print(); });
 $('#sendWhatsAppButton').addEventListener('click', () => {
   if (!lastSavedQuote?.phone) return;
   const text = `Hola ${lastSavedQuote.recipient_name}, te compartimos la cotización ${lastSavedQuote.quote_number}. Descarga el PDF desde el panel y adjúntalo a este chat.`;

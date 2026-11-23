@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css">
+  <link rel="stylesheet" href="quote-preview.css">
 </head>
 <body class="admin-body">
   <header class="admin-header">
@@ -46,30 +47,41 @@
           <div class="panel-heading"><div><span class="admin-eyebrow">PROPUESTA COMERCIAL</span><h2 id="quoteTitle">Preparar cotización</h2></div></div>
           <form id="quoteBuilder" class="admin-form">
             <input type="hidden" name="requestId">
-            <div class="form-grid"><label>Dirigida a<input name="recipientName" required autocomplete="name" placeholder="Nombre del cliente"></label><label>WhatsApp del cliente<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional"></label><label>Fecha del evento<input name="eventDate" type="date"></label><label>Ciudad<input name="city" placeholder="Ciudad"></label></div>
+            <div class="form-grid"><label>Nombre del cliente<input name="recipientName" required autocomplete="name" placeholder="Nombre completo"></label><label>Cédula o NIT del cliente<input name="customerDocument" placeholder="Opcional"></label><label>Teléfono / WhatsApp<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional"></label><label>Correo electrónico<input name="email" type="email" autocomplete="email" placeholder="Opcional"></label><label>Evento<input name="eventName" placeholder="Ej. Boda, quince años"></label><label>Fecha del evento<input name="eventDate" type="date"></label><label>Ciudad<input name="city" placeholder="Ciudad"></label><label>Validez de la cotización (días)<input name="validityDays" type="number" min="1" max="365" value="30"></label></div>
             <div class="line-heading"><div><span class="admin-eyebrow">DETALLE</span><h3>Productos y servicios</h3></div><button class="admin-button admin-button-outline" id="addLineButton" type="button">+ Agregar ítem</button></div>
             <div class="quote-lines" id="quoteLines"></div>
             <label>Comentarios para la propuesta<textarea name="comments" rows="3" placeholder="Alcance, condiciones o información adicional"></textarea></label>
+            <div class="form-grid quote-terms-grid"><label>Descuento (%)<input name="discountPercent" type="number" min="0" max="100" step="0.01" value="0"></label><label>IVA (%) según aplique<input name="ivaPercent" type="number" min="0" max="100" step="0.01" value="19"></label><label>Forma de pago<input name="paymentMethod" placeholder="Ej. Transferencia / efectivo"></label><label>Anticipo para reserva<input name="deposit" placeholder="Ej. 50% para reservar"></label></div>
             <div class="quote-total"><span>Total de la cotización</span><strong id="quoteTotal">$ 0</strong></div>
             <button class="admin-button admin-button-primary" type="submit" id="saveQuoteButton">Guardar cotización</button>
             <p class="admin-feedback" id="quoteFeedback" role="status" aria-live="polite"></p>
           </form>
-          <div class="quote-actions" id="quoteActions" hidden><button class="admin-button admin-button-outline" type="button" id="downloadPdfButton">Descargar PDF</button><button class="admin-button admin-button-primary" type="button" id="sendWhatsAppButton">Abrir WhatsApp para enviarlo</button><p>Descarga el PDF y adjúntalo en el chat con tu cliente.</p></div>
+          <div class="quote-actions" id="quoteActions" hidden><button class="admin-button admin-button-outline" type="button" id="viewQuoteButton">Ver cotización</button><button class="admin-button admin-button-primary" type="button" id="sendWhatsAppButton">Abrir WhatsApp para enviarlo</button><p>Abre la vista formal y descarga el PDF desde allí.</p></div>
         </section>
       </div>
     </section>
     <p class="page-feedback" id="pageFeedback" role="status" aria-live="polite"></p>
   </main>
 
-  <article class="print-document" id="printDocument" aria-label="Cotización para imprimir">
-    <header class="print-header"><img src="assets/logo-laura-galindo-visible.png" alt="Laura Galindo Eventos"><div><h1>Laura Galindo Eventos</h1><p>NIT 1.110.513.001-1</p><p>313 448 6683 · 322 703 9197</p><p>Calle 68 # 2-70, Arkaniza 1</p></div></header>
-    <div class="print-title"><div><span>COTIZACIÓN</span><h2 id="printQuoteNumber"></h2></div><p id="printCreatedAt"></p></div>
-    <section class="print-recipient"><div><span>DIRIGIDA A</span><strong id="printRecipient"></strong></div><div><span>FECHA DEL EVENTO</span><strong id="printEventDate"></strong></div><div><span>CIUDAD</span><strong id="printCity"></strong></div></section>
-    <table class="print-lines"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Valor unitario</th><th>Total</th></tr></thead><tbody id="printItems"></tbody></table>
-    <div class="print-grand-total"><span>Total</span><strong id="printTotal"></strong></div>
-    <section class="print-comments" id="printCommentsSection"><h3>Comentarios</h3><p id="printComments"></p></section>
-    <footer class="print-footer"><p>Gracias por permitirnos acompañarte en la creación de un momento especial.</p><span>Laura Galindo Eventos</span></footer>
-  </article>
+  <dialog class="quote-preview-dialog" id="quotePreviewDialog" aria-label="Vista previa de cotización">
+    <div class="quote-preview-toolbar"><span>Vista previa · Cotización formal</span><div><button class="admin-button admin-button-outline" type="button" id="closeQuotePreview">Cerrar</button><button class="admin-button admin-button-primary" type="button" id="downloadPdfButton">Imprimir / Guardar PDF</button></div></div>
+    <article class="print-document" id="printDocument" aria-label="Cotización formal">
+      <header class="print-header"><img src="assets/logo-laura-galindo-visible.png" alt="Logo Laura Galindo"><div class="company-heading"><h1>CASA DE EVENTOS LAURA GALINDO</h1><p>NIT 1.110.513.001-1</p><p>Tel: 313 448 6683 / 322 703 9197</p><p>Calle 68 # 2-70, Arkaniza 1</p></div></header>
+      <div class="print-title"><h2>COTIZACIÓN</h2></div>
+      <div class="print-info-grid">
+        <section class="print-info-box"><h3>DATOS DEL CLIENTE</h3><dl><dt>Señor(a/es):</dt><dd id="printRecipient"></dd><dt>NIT / C.C.:</dt><dd id="printCustomerDocument"></dd><dt>Teléfono:</dt><dd id="printPhone"></dd><dt>Correo:</dt><dd id="printEmail"></dd><dt>Evento:</dt><dd id="printEventName"></dd><dt>Ciudad:</dt><dd id="printCity"></dd></dl></section>
+        <section class="print-info-box"><h3>DATOS DE LA COTIZACIÓN</h3><dl><dt>N.º cotización:</dt><dd id="printQuoteNumber"></dd><dt>Fecha:</dt><dd id="printCreatedAt"></dd><dt>Validez:</dt><dd id="printValidity"></dd><dt>Válida hasta:</dt><dd id="printValidUntil"></dd><dt>Fecha del evento:</dt><dd id="printEventDate"></dd></dl></section>
+      </div>
+      <table class="print-lines"><thead><tr><th>Ítem</th><th>Descripción del producto / servicio</th><th>Cantidad</th><th>Unidad</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody id="printItems"></tbody></table>
+      <div class="print-bottom-grid">
+        <section class="print-observations" id="printCommentsSection"><h3>OBSERVACIONES</h3><p id="printComments"></p></section>
+        <section class="print-totals"><dl><dt>Subtotal</dt><dd id="printSubtotal"></dd><dt>Descuento (<span id="printDiscountPercent"></span>%)</dt><dd id="printDiscount"></dd><dt>IVA (<span id="printIvaPercent"></span>%)</dt><dd id="printIva"></dd></dl><div class="print-grand-total"><span>TOTAL</span><strong id="printTotal"></strong></div></section>
+      </div>
+      <section class="print-commercial"><h3>CONDICIONES COMERCIALES</h3><dl><dt>Forma de pago:</dt><dd id="printPaymentMethod"></dd><dt>Anticipo para reserva:</dt><dd id="printDeposit"></dd></dl></section>
+      <section class="print-signatures"><div><strong>Laura Galindo</strong><span>Casa de Eventos Laura Galindo</span></div><div><strong>Aceptación del cliente</strong><span id="printSignatureName">Nombre, firma y fecha</span></div></section>
+      <footer class="print-footer"><p>¡Gracias por permitirnos ser parte de tu celebración!</p></footer>
+    </article>
+  </dialog>
 
   <script src="config.js"></script>
   <script src="catalogo.js"></script>

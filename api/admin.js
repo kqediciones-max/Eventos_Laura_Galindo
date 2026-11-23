@@ -4,6 +4,9 @@ import { requireAdmin, safeText, sendJson, supabaseRequest, verifySameOrigin, re
 function normalizeQuote(body, admin) {
   const recipientName = safeText(body?.recipientName, 160);
   const items = Array.isArray(body?.items) ? body.items : [];
+  const discountPercent = Number(body?.discountPercent ?? 0);
+  const ivaPercent = Number(body?.ivaPercent ?? 0);
+  const validityDays = Number(body?.validityDays ?? 30);
   if (!recipientName || items.length < 1 || items.length > 80) return null;
 
   const normalizedItems = items.map((item) => {
@@ -19,7 +22,11 @@ function normalizeQuote(body, admin) {
     };
   });
   if (normalizedItems.some((item) => !item.id || !item.name || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 999 || !Number.isFinite(item.unitPrice) || item.unitPrice < 0 || item.unitPrice > 1_000_000_000)) return null;
-  const total = normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const subtotal = normalizedItems.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 100 || !Number.isFinite(ivaPercent) || ivaPercent < 0 || ivaPercent > 100 || !Number.isInteger(validityDays) || validityDays < 1 || validityDays > 365) return null;
+  const discountAmount = Math.round(subtotal * discountPercent / 100);
+  const ivaAmount = Math.round((subtotal - discountAmount) * ivaPercent / 100);
+  const total = subtotal - discountAmount + ivaAmount;
   if (!Number.isFinite(total) || total > 10_000_000_000) return null;
 
   const now = new Date();
@@ -29,11 +36,22 @@ function normalizeQuote(body, admin) {
     p_quote_number: quoteNumber,
     p_recipient_name: recipientName,
     p_phone: safeText(body?.phone, 40),
+    p_customer_document: safeText(body?.customerDocument, 80),
+    p_email: safeText(body?.email, 180),
+    p_event_name: safeText(body?.eventName, 160),
     p_event_date: safeText(body?.eventDate, 20) || null,
     p_city: safeText(body?.city, 120),
+    p_validity_days: validityDays,
     p_comments: safeText(body?.comments, 3000),
     p_items: normalizedItems,
+    p_subtotal: Math.round(subtotal),
+    p_discount_percent: discountPercent,
+    p_discount_amount: discountAmount,
+    p_iva_percent: ivaPercent,
+    p_iva_amount: ivaAmount,
     p_total: Math.round(total),
+    p_payment_method: safeText(body?.paymentMethod, 240),
+    p_deposit: safeText(body?.deposit, 240),
     p_created_by: admin.name
   };
 }

@@ -1,0 +1,56 @@
+
+/* Vista formal de cotización */
+.quote-preview-dialog{width:min(1100px,96vw);max-width:none;max-height:94vh;padding:0;border:0;border-radius:9px;overflow:auto;background:#f0efec;box-shadow:0 22px 80px #29202650}
+.quote-preview-dialog::backdrop{background:#251b22b8;backdrop-filter:blur(3px)}
+.quote-preview-toolbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;background:#fffdfa;border-bottom:1px solid #e9dfe1;color:#81747a;font:11px Arial,sans-serif}
+.quote-preview-toolbar>div{display:flex;gap:8px}
+.quote-preview-toolbar .admin-button{min-height:36px}
+.quote-preview-dialog .print-document{display:block;width:min(210mm,calc(100% - 48px));min-height:297mm;margin:24px auto;padding:17mm 15mm;background:#fff;color:#282629;box-shadow:0 5px 24px #29202620;font:9pt Arial,sans-serif}
+.print-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding-bottom:9px;border-bottom:5px solid #80b79a}
+.print-header img{width:86px;height:78px;object-fit:contain}
+.company-heading{text-align:right}
+.company-heading h1{margin:0 0 4px;color:#392d32;font:700 15pt Georgia,serif}
+.company-heading p{margin:2px 0;color:#645d60;font:8pt Arial,sans-serif}
+.print-title{display:flex;justify-content:flex-end;margin:0 0 12px;border:0;padding:0}
+.print-title h2{margin:0;background:#e8a9ba;color:#fff;padding:7px 24px;text-align:center;font:700 15pt Georgia,serif;min-width:58%}
+.print-info-grid{display:grid;grid-template-columns:1.25fr .8fr;gap:9%;margin:10px 0 12px}
+.print-info-box h3,.print-observations h3,.print-commercial h3{margin:0;background:#83b99b;color:#fff;text-align:center;padding:5px;font:bold 8pt Arial,sans-serif}
+.print-info-box dl,.print-commercial dl{display:grid;grid-template-columns:36% 64%;margin:0;border:1px solid #83b99b}
+.print-info-box dt,.print-info-box dd,.print-commercial dt,.print-commercial dd{margin:0;min-height:18px;padding:3px 5px;border-bottom:1px solid #aad1b8;font:7.5pt Arial,sans-serif}
+.print-info-box dd,.print-commercial dd{background:#e3f0e7;overflow-wrap:anywhere}
+.print-info-box dt,.print-commercial dt{border-right:1px solid #aad1b8}
+.print-lines{width:100%;border-collapse:collapse;table-layout:fixed;margin:0 0 10px}
+.print-lines th{background:#e8a9ba;color:#fff;text-align:center;padding:6px 3px;font-size:7pt;font-weight:600}
+.print-lines td{height:24px;padding:4px 3px;border:1px solid #e8a9ba;background:#fff;font-size:7pt;overflow-wrap:anywhere;vertical-align:top}
+.print-lines th:nth-child(1){width:7%}.print-lines th:nth-child(2){width:36%}.print-lines th:nth-child(3){width:10%}.print-lines th:nth-child(4){width:10%}.print-lines th:nth-child(5){width:18%}.print-lines th:nth-child(6){width:19%}
+.print-lines th:nth-child(n+3),.print-lines td:nth-child(n+3){text-align:center}
+.print-lines td:nth-child(5),.print-lines td:nth-child(6){text-align:right}
+.print-lines .line-description small{display:block;margin-top:3px;color:#786f72;font-size:6.5pt}
+.print-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:10%;align-items:start;margin:10px 0 12px}
+.print-observations{min-height:82px;border:1px solid #e8a9ba}
+.print-observations h3{background:#e8a9ba}
+.print-observations p{margin:0;padding:7px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:8pt;line-height:1.45}
+.print-totals dl{display:grid;grid-template-columns:1fr auto;margin:0;border:1px solid #83b99b;background:#e3f0e7}
+.print-totals dt,.print-totals dd{margin:0;padding:4px 8px;border-bottom:1px solid #aad1b8;font-size:8pt}
+.print-totals dd{text-align:right}
+.print-grand-total{width:100%;margin:0;padding:5px 8px;background:#83b99b;color:white;display:flex;justify-content:space-between;font-size:10pt;font-weight:bold}
+.print-commercial{margin:12px 0}
+.print-commercial dl{grid-template-columns:31% 69%}
+.print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:10%;margin-top:42px;text-align:center}
+.print-signatures>div{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:4px;border-top:1px solid #5f5a5c}
+.print-signatures strong{font-size:8pt}.print-signatures span{color:#81777b;font-size:7pt}
+.print-footer{margin-top:14px;padding:6px;background:#f9e3e9;text-align:center;color:#453940}
+.print-footer p{margin:0;font:italic 8pt Georgia,serif}
+.quote-terms-grid{margin-top:4px}
+@media(max-width:900px){.admin-workspace{grid-template-columns:1fr}.requests-panel{order:2}.quote-panel{order:1}}
+@media(max-width:600px){.admin-header{height:70px;padding:0 14px}.admin-brand{gap:9px;font-size:9px}.admin-brand img{width:52px;height:52px}.admin-main{width:calc(100% - 24px);margin:22px auto 40px}.login-card{margin:35px auto;padding:25px 20px}.admin-welcome{align-items:flex-start;flex-direction:column;padding-bottom:17px}.admin-welcome h1{font-size:32px}.admin-welcome>.admin-button{width:100%}.admin-stats{grid-template-columns:1fr;gap:8px}.admin-stats article{padding:12px 15px}.admin-stats strong{font-size:22px}.admin-panel{padding:16px 13px}.panel-heading h2{font-size:22px}.form-grid{grid-template-columns:1fr}.line-heading{align-items:flex-end}.quote-line{grid-template-columns:minmax(0,1fr) minmax(85px,.55fr) 32px;gap:8px;padding:10px}.quote-line .item-select{grid-column:1/3}.quote-line .line-comment{grid-column:1/3}.quote-line label.unit-label{grid-column:1/2}.quote-line .remove-line{grid-column:3;grid-row:1}.quote-line .quantity-label{grid-column:2/3}.quote-actions>.admin-button{width:100%}.quote-preview-dialog .print-document{width:760px;min-height:0;margin:14px;padding:28px}.quote-preview-toolbar{align-items:flex-start;flex-direction:column}.quote-preview-toolbar>div{width:100%}.quote-preview-toolbar .admin-button{flex:1}}
+@media print{
+  @page{size:A4;margin:10mm}
+  body.admin-body{background:white;min-height:0}
+  body.admin-body>*{display:none!important}
+  body.admin-body>#quotePreviewDialog{position:static!important;display:block!important;inset:auto!important;width:100%!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;overflow:visible!important;background:white!important;box-shadow:none!important}
+  #quotePreviewDialog::backdrop{display:none!important}
+  #quotePreviewDialog .quote-preview-toolbar{display:none!important}
+  #quotePreviewDialog .print-document{display:block!important;width:100%!important;min-height:0!important;margin:0!important;padding:0!important;box-shadow:none!important}
+  #quotePreviewDialog .print-lines tr,.print-info-box,.print-observations,.print-totals,.print-commercial,.print-signatures{break-inside:avoid}
+}
