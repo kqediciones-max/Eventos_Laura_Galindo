@@ -6,6 +6,13 @@ const categories = [
   'Iluminación', 'Decoración', 'Flores', 'Telas y textiles'
 ];
 
+const eventOptions = [
+  { id: 'event-bodas', name: 'Bodas', category: 'Cotización de eventos', image: 'assets/events/bodas.png' },
+  { id: 'event-sociales', name: 'Eventos sociales', category: 'Cotización de eventos', image: 'assets/events/eventos-sociales.png' },
+  { id: 'event-corporativos', name: 'Eventos corporativos', category: 'Cotización de eventos', image: 'assets/events/eventos-corporativos.png' },
+  { id: 'event-quince', name: 'Quince años', category: 'Cotización de eventos', image: 'assets/events/quince-anos.png' }
+];
+
 const products = [];
 const imageParts = {
   '32-2': [

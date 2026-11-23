@@ -2,12 +2,6 @@ const $ = (selector) => document.querySelector(selector);
 const grid = $('#productGrid');
 const categoryList = $('#categoryList');
 const cart = new Map(JSON.parse(localStorage.getItem('lg-eventos-cart') || '[]'));
-const eventOptions = [
-  { id: 'event-bodas', name: 'Bodas', category: 'Cotización de eventos', image: 'assets/events/bodas.png' },
-  { id: 'event-sociales', name: 'Eventos sociales', category: 'Cotización de eventos', image: 'assets/events/eventos-sociales.png' },
-  { id: 'event-corporativos', name: 'Eventos corporativos', category: 'Cotización de eventos', image: 'assets/events/eventos-corporativos.png' },
-  { id: 'event-quince', name: 'Quince años', category: 'Cotización de eventos', image: 'assets/events/quince-anos.png' }
-];
 let activeCategory = 'Todo';
 let toastTimer;
 let previewTrigger = null;
@@ -166,6 +160,7 @@ function quoteMessage(formData) {
   const details = [
     `Hola, quisiera solicitar una cotización de ${window.CATALOG_CONFIG.businessName}.`, '',
     `Mi nombre: ${formData.get('name')}`,
+    formData.get('phone') ? `WhatsApp: ${formData.get('phone')}` : null,
     formData.get('date') ? `Fecha del evento: ${formData.get('date')}` : null,
     formData.get('city') ? `Ciudad: ${formData.get('city')}` : null,
     formData.get('notes') ? `Detalles: ${formData.get('notes')}` : null,
@@ -241,12 +236,36 @@ $('#drawerBackdrop').addEventListener('click', () => setDrawer(false));
 $('#continueShopping').addEventListener('click', () => setDrawer(false));
 $('#quoteForm').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const message = quoteMessage(new FormData(event.currentTarget));
+  const formData = new FormData(event.currentTarget);
+  const message = quoteMessage(formData);
   const number = (window.CATALOG_CONFIG.whatsappNumber || '').replace(/\D/g, '');
+  const selectedItems = [...cart.entries()].map(([id, quantity]) => {
+    const item = quoteItem(id);
+    return item ? { id, name: item.name, category: item.category, quantity } : null;
+  }).filter(Boolean);
   if (number) {
     window.open(`https://wa.me/${number}?text=${encodeURIComponent(message)}`, '_blank', 'noopener,noreferrer');
-    return;
   }
+  try {
+    const response = await fetch('/api/requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      keepalive: true,
+      body: JSON.stringify({
+        customerName: formData.get('name'),
+        phone: formData.get('phone'),
+        eventDate: formData.get('date'),
+        city: formData.get('city'),
+        notes: formData.get('notes'),
+        items: selectedItems
+      })
+    });
+    if (!response.ok) throw new Error('No se pudo guardar la solicitud');
+    showToast('Solicitud guardada. WhatsApp está listo para enviarla.');
+  } catch {
+    showToast(number ? 'WhatsApp está listo. El panel requiere que se configure el backend.' : 'No se pudo guardar la solicitud. Configura el backend del panel.');
+  }
+  if (number) return;
   try {
     await navigator.clipboard.writeText(message);
     showToast('Solicitud copiada. Configura el WhatsApp del negocio para abrir el chat directo.');

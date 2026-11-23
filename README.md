@@ -1,25 +1,39 @@
-# Eventos_Laura_Galindo
-Sitio estático para mostrar los productos del catálogo, filtrarlos por categoría, guardarlos en una canasta y preparar una solicitud de precios y disponibilidad.
+# Laura Galindo Eventos
 
-## Abrir la página
+Catálogo web para alquiler de mobiliario y planeación de eventos. El cliente puede preparar una solicitud, abrirla en WhatsApp y, cuando el sitio se despliega en Vercel con Supabase configurado, guardarla en una bandeja privada para los administradores.
 
-Abre `index.html` en un navegador. No necesitas instalar programas ni iniciar un servidor para revisar el catálogo.
+## Desarrollo local
 
-## Solicitudes directas por WhatsApp
+- Catálogo estático: abre `index.html` en un navegador.
+- Panel: requiere Vercel Functions y variables de entorno. Instala Vercel CLI (`npm install --global vercel`) e inicia con `npm run dev` después de crear `.env.local` a partir de `.env.example`.
 
-El número del negocio ya está configurado en `config.js`. El formulario redacta un mensaje con los datos del evento y las piezas seleccionadas, y abre WhatsApp para enviarlo. El catálogo no publica tarifas ni inventario: cada cotización confirma esos datos según la fecha y los detalles del evento.
+## Configuración de administración y solicitudes
 
-## Publicar en GitHub Pages
+GitHub Pages solo publica archivos estáticos; no ejecuta las funciones de autenticación ni la API. Para usar el panel de cotizaciones y guardar solicitudes, despliega el repositorio en Vercel y conecta un proyecto de Supabase.
 
-1. Integra la rama `codex/catalogo-web` en `main`.
-2. En GitHub, abre **Settings → Pages**. En **Build and deployment**, elige **Deploy from a branch**, selecciona la rama `main` y la carpeta raíz `/`, y guarda.
-3. GitHub mostrará la dirección pública de la página en esa misma sección cuando termine la publicación.
+1. En Supabase, abre SQL Editor y ejecuta `database/schema.sql`.
+2. En Vercel, conecta este repositorio y agrega las variables de `.env.example` en **Project Settings → Environment Variables**. Completa la URL del proyecto, la clave secreta del proyecto Supabase (`sb_secret_…`), una clave de sesión aleatoria de 32 o más caracteres y las claves de administración. La clave secreta, las claves de administración y la clave de sesión son secretos del servidor: nunca las agregues a `config.js`, archivos públicos ni al repositorio.
+3. Configura las claves iniciales de los dos administradores directamente como variables privadas de Vercel. Para cambiar claves, actualiza las variables y vuelve a desplegar.
+4. Publica el proyecto en Vercel y usa ese dominio como sitio principal para que `/api/login`, `/api/admin` y `/api/requests` estén disponibles.
 
-## Contenido
+El acceso del panel está en `/admin.html`. La sesión se firma en el servidor y se conserva en una cookie `HttpOnly`; las contraseñas no están incluidas en el frontend. Las solicitudes solo se guardan si el navegador llega al sitio de Vercel con el backend configurado. Sin ese backend, el catálogo sigue ofreciendo el flujo de WhatsApp.
 
-- `index.html`, `styles.css`: estructura y diseño adaptable a móvil.
-- `catalogo.js`: categorías y nombres visibles en el PDF.
-- `assets/products`: imágenes transparentes agrupadas por pieza desde el catálogo.
-- `config.js`: nombre del negocio y número de WhatsApp para cotizaciones.
+## Flujo del administrador
 
-El PDF original se conserva en la carpeta de trabajo y se omite del repositorio para no subir el archivo de 78 MB. El repositorio original y su imagen se conservan.
+- Revisa solicitudes recibidas, sus datos de evento y productos seleccionados.
+- Crea una cotización nueva o desde una solicitud, agregando productos del catálogo, cantidades, precios, comentarios y datos del cliente.
+- Guarda la cotización para conservarla en el historial.
+- Usa **Descargar PDF** y elige “Guardar como PDF” en el diálogo de impresión. El documento incluye el logo, NIT, teléfonos y dirección disponibles en el formato recibido.
+- Abre WhatsApp para enviar el archivo descargado al cliente.
+
+## Archivos principales
+
+- `index.html`, `styles.css`, `home.css`: sitio público.
+- `catalogo.js`: productos y categorías usados por el catálogo y el cotizador.
+- `admin.html`, `admin.css`, `admin.js`: acceso y panel de cotizaciones.
+- `api/`: funciones de Vercel para sesión, solicitudes y administración.
+- `lib/server.js`: sesiones, validación y acceso del servidor a Supabase.
+- `database/schema.sql`: tablas privadas para solicitudes y cotizaciones.
+- `config.js`: información pública del negocio y número de WhatsApp.
+
+El PDF original se conserva localmente y está excluido del repositorio por su tamaño. El logo se sirve desde `assets`.

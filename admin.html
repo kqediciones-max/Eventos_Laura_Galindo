@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f2e1e3">
+  <title>Administración de cotizaciones | Laura Galindo Eventos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <a class="admin-brand" href="index.html"><img src="assets/logo-laura-galindo-visible.png" alt="Laura Galindo Eventos"><span>Administración de cotizaciones</span></a>
+    <button class="admin-button admin-button-quiet" id="logoutButton" type="button" hidden>Cerrar sesión</button>
+  </header>
+
+  <main class="admin-main">
+    <section class="login-card" id="loginScreen" aria-labelledby="loginTitle">
+      <span class="admin-eyebrow">ACCESO PRIVADO</span>
+      <h1 id="loginTitle">Panel de cotizaciones</h1>
+      <p>Ingresa con tu usuario de administración para revisar solicitudes y preparar cotizaciones.</p>
+      <form id="loginForm" class="admin-form">
+        <label>Usuario<input name="username" autocomplete="username" required placeholder="Tu usuario"></label>
+        <label>Clave<input name="password" type="password" autocomplete="current-password" required placeholder="Tu clave"></label>
+        <button class="admin-button admin-button-primary" type="submit">Iniciar sesión</button>
+      </form>
+      <p class="admin-feedback" id="loginFeedback" role="status" aria-live="polite"></p>
+      <a class="back-link" href="index.html">← Volver al catálogo</a>
+    </section>
+
+    <section id="adminApp" hidden>
+      <div class="admin-welcome"><div><span class="admin-eyebrow">CENTRO DE ATENCIÓN</span><h1>Hola, <span id="adminName"></span></h1><p>Solicitudes de clientes y cotizaciones en un solo lugar.</p></div><button class="admin-button admin-button-primary" id="newQuoteButton" type="button">Nueva cotización</button></div>
+      <div class="admin-stats" aria-label="Resumen"><article><span>Solicitudes pendientes</span><strong id="pendingCount">0</strong></article><article><span>Cotizaciones guardadas</span><strong id="quoteCount">0</strong></article><article><span>Con respuesta enviada</span><strong id="answeredCount">0</strong></article></div>
+      <div class="admin-workspace">
+        <section class="admin-panel requests-panel" aria-labelledby="requestsTitle">
+          <div class="panel-heading"><div><span class="admin-eyebrow">BANDEJA DE ENTRADA</span><h2 id="requestsTitle">Solicitudes</h2></div><button class="icon-reload" id="refreshButton" type="button" aria-label="Actualizar solicitudes">↻</button></div>
+          <div class="request-list" id="requestList"><p class="empty-note">Cargando solicitudes…</p></div>
+          <div class="panel-heading saved-heading"><div><span class="admin-eyebrow">HISTORIAL</span><h2>Cotizaciones</h2></div></div>
+          <div class="quote-list" id="quoteList"><p class="empty-note">Aún no hay cotizaciones.</p></div>
+        </section>
+
+        <section class="admin-panel quote-panel" aria-labelledby="quoteTitle">
+          <div class="panel-heading"><div><span class="admin-eyebrow">PROPUESTA COMERCIAL</span><h2 id="quoteTitle">Preparar cotización</h2></div></div>
+          <form id="quoteBuilder" class="admin-form">
+            <input type="hidden" name="requestId">
+            <div class="form-grid"><label>Dirigida a<input name="recipientName" required autocomplete="name" placeholder="Nombre del cliente"></label><label>WhatsApp del cliente<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional"></label><label>Fecha del evento<input name="eventDate" type="date"></label><label>Ciudad<input name="city" placeholder="Ciudad"></label></div>
+            <div class="line-heading"><div><span class="admin-eyebrow">DETALLE</span><h3>Productos y servicios</h3></div><button class="admin-button admin-button-outline" id="addLineButton" type="button">+ Agregar ítem</button></div>
+            <div class="quote-lines" id="quoteLines"></div>
+            <label>Comentarios para la propuesta<textarea name="comments" rows="3" placeholder="Alcance, condiciones o información adicional"></textarea></label>
+            <div class="quote-total"><span>Total de la cotización</span><strong id="quoteTotal">$ 0</strong></div>
+            <button class="admin-button admin-button-primary" type="submit" id="saveQuoteButton">Guardar cotización</button>
+            <p class="admin-feedback" id="quoteFeedback" role="status" aria-live="polite"></p>
+          </form>
+          <div class="quote-actions" id="quoteActions" hidden><button class="admin-button admin-button-outline" type="button" id="downloadPdfButton">Descargar PDF</button><button class="admin-button admin-button-primary" type="button" id="sendWhatsAppButton">Abrir WhatsApp para enviarlo</button><p>Descarga el PDF y adjúntalo en el chat con tu cliente.</p></div>
+        </section>
+      </div>
+    </section>
+    <p class="page-feedback" id="pageFeedback" role="status" aria-live="polite"></p>
+  </main>
+
+  <article class="print-document" id="printDocument" aria-label="Cotización para imprimir">
+    <header class="print-header"><img src="assets/logo-laura-galindo-visible.png" alt="Laura Galindo Eventos"><div><h1>Laura Galindo Eventos</h1><p>NIT 1.110.513.001-1</p><p>313 448 6683 · 322 703 9197</p><p>Calle 68 # 2-70, Arkaniza 1</p></div></header>
+    <div class="print-title"><div><span>COTIZACIÓN</span><h2 id="printQuoteNumber"></h2></div><p id="printCreatedAt"></p></div>
+    <section class="print-recipient"><div><span>DIRIGIDA A</span><strong id="printRecipient"></strong></div><div><span>FECHA DEL EVENTO</span><strong id="printEventDate"></strong></div><div><span>CIUDAD</span><strong id="printCity"></strong></div></section>
+    <table class="print-lines"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Valor unitario</th><th>Total</th></tr></thead><tbody id="printItems"></tbody></table>
+    <div class="print-grand-total"><span>Total</span><strong id="printTotal"></strong></div>
+    <section class="print-comments" id="printCommentsSection"><h3>Comentarios</h3><p id="printComments"></p></section>
+    <footer class="print-footer"><p>Gracias por permitirnos acompañarte en la creación de un momento especial.</p><span>Laura Galindo Eventos</span></footer>
+  </article>
+
+  <script src="config.js"></script>
+  <script src="catalogo.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

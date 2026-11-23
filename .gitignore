@@ -1,2 +1,5 @@
 # El PDF original se conserva localmente. El sitio utiliza las imágenes extraídas.
 *.pdf
+.env
+.env.local
+.env.production
