@@ -219,16 +219,21 @@ async function updateRequestStatus(row, status) {
 }
 
 function productOptions(selectedId = '') {
-  return [...products, ...eventOptions].map((item) => {
+  const options = [...products, ...eventOptions].map((item) => {
     const option = document.createElement('option');
     option.value = item.id;
     option.textContent = `${item.name} · ${item.category}`;
     if (item.id === selectedId) option.selected = true;
     return option;
   });
+  const customOption = document.createElement('option');
+  customOption.value = 'outside-inventory';
+  customOption.textContent = 'Producto fuera del inventario';
+  options.unshift(customOption);
+  return options;
 }
 
-function addQuoteLine(item = {}) {
+function addQuoteLine(item = {}, { prepend = true, focus = true } = {}) {
   const row = document.createElement('div');
   row.className = 'quote-line';
   const itemLabel = document.createElement('label');
@@ -242,6 +247,27 @@ function addQuoteLine(item = {}) {
   initial.textContent = 'Seleccionar del catálogo';
   select.append(initial, ...productOptions(item.id || ''));
   itemLabel.append(select);
+
+  const customNameLabel = document.createElement('label');
+  customNameLabel.className = 'custom-item-name';
+  customNameLabel.textContent = 'Nombre del producto fuera del inventario';
+  customNameLabel.hidden = true;
+  const customName = document.createElement('input');
+  customName.type = 'text';
+  customName.maxLength = 180;
+  customName.placeholder = 'Escribe el nombre para esta cotización';
+  customName.dataset.field = 'customName';
+  customName.disabled = true;
+  customNameLabel.append(customName);
+  select.addEventListener('change', () => {
+    const isCustom = select.value === 'outside-inventory';
+    customNameLabel.hidden = !isCustom;
+    customName.disabled = !isCustom;
+    customName.required = isCustom;
+    if (isCustom) customName.focus();
+    else customName.value = '';
+    updateTotal();
+  });
 
   const quantityLabel = document.createElement('label');
   quantityLabel.className = 'quantity-label';
@@ -285,10 +311,15 @@ function addQuoteLine(item = {}) {
   remove.textContent = '×';
   remove.setAttribute('aria-label', 'Quitar este ítem');
   remove.addEventListener('click', () => { row.remove(); updateTotal(); });
-  row.append(itemLabel, quantityLabel, priceLabel, noteLabel, remove);
+  row.append(itemLabel, customNameLabel, quantityLabel, priceLabel, noteLabel, remove);
   for (const control of row.querySelectorAll('input,select')) control.addEventListener('input', updateTotal);
-  quoteLines.append(row);
+  if (prepend) quoteLines.prepend(row);
+  else quoteLines.append(row);
   updateTotal();
+  if (focus) {
+    select.focus({ preventScroll: true });
+    row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
   return row;
 }
 
@@ -343,7 +374,7 @@ function prepareFromRequest(row) {
   quoteBuilder.elements.city.value = row.city || '';
   quoteBuilder.elements.comments.value = row.notes ? `Solicitud del cliente: ${row.notes}` : '';
   quoteLines.replaceChildren();
-  for (const item of row.items || []) addQuoteLine({ id: item.id, quantity: item.quantity, unitPrice: '' });
+  for (const item of row.items || []) addQuoteLine({ id: item.id, quantity: item.quantity, unitPrice: '' }, { prepend: false, focus: false });
   if (!row.items?.length) addQuoteLine();
   $('#quoteTitle').textContent = `Responder a ${row.customer_name || 'cliente'}`;
   $('#quoteBuilder').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -355,7 +386,19 @@ quoteBuilder.addEventListener('change', updateTotal);
 quoteBuilder.addEventListener('submit', async (event) => {
   event.preventDefault();
   const items = [...quoteLines.querySelectorAll('.quote-line')].map((line) => {
-    const item = selectedCatalogItem($('[data-field="product"]', line));
+    const select = $('[data-field="product"]', line);
+    if (select.value === 'outside-inventory') {
+      const name = $('[data-field="customName"]', line).value.trim();
+      return name ? {
+        id: 'outside-inventory',
+        name,
+        category: 'Producto fuera del inventario',
+        quantity: Number($('[data-field="quantity"]', line).value),
+        unitPrice: Number($('[data-field="price"]', line).value),
+        comment: $('[data-field="comment"]', line).value
+      } : null;
+    }
+    const item = selectedCatalogItem(select);
     return item ? {
       id: item.id,
       name: item.name,

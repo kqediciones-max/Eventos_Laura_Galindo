@@ -64,3 +64,7 @@
 #taxTypeField[hidden]{display:none!important}
 .print-tax-note{margin-top:5px!important;font:italic 7pt Arial,sans-serif!important;color:#6c5b63}
 @media(max-width:600px){.quote-card-actions{flex-direction:column;align-items:stretch}.quote-card-actions button{width:100%}.tax-controls{grid-template-columns:1fr}}
+
+.custom-item-name{grid-column:1/4}
+.custom-item-name input{width:100%}
+@media(max-width:600px){.custom-item-name{grid-column:1/3}}

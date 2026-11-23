@@ -22,6 +22,7 @@ El acceso del panel está en `/admin.html`. La sesión se firma en el servidor y
 
 - Revisa solicitudes recibidas, sus datos de evento y productos seleccionados.
 - Crea una cotización nueva o desde una solicitud, agregando productos del catálogo, cantidades, precios, comentarios y datos del cliente.
+- Cada línea nueva aparece al inicio del detalle. También puedes elegir “Producto fuera del inventario” y escribir su nombre para incluirlo solo en esa cotización.
 - Decide si aplica un impuesto por cotización: IVA del 5%, IVA del 19% o impuesto al consumo del 8%. Si no seleccionas un impuesto, el documento no muestra una fila de impuestos.
 - Guarda la cotización para conservarla en el historial.
 - Elimina cotizaciones del historial; si una solicitud ya no tiene cotizaciones vinculadas, vuelve a quedar pendiente.
