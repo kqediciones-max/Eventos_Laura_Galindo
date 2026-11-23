@@ -59,9 +59,7 @@ revoke all on public.quotes from anon, authenticated;
 grant all on public.quote_requests to service_role;
 grant all on public.quotes to service_role;
 
-drop function if exists public.admin_create_quote(uuid, text, text, text, date, text, text, jsonb, bigint, text);
-
-create or replace function public.admin_create_quote(
+create or replace function public.admin_create_quote_v2(
   p_request_id uuid,
   p_quote_number text,
   p_recipient_name text,
@@ -114,5 +112,5 @@ begin
 end;
 $$;
 
-revoke all on function public.admin_create_quote(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) from public, anon, authenticated;
-grant execute on function public.admin_create_quote(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) to service_role;
+revoke all on function public.admin_create_quote_v2(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) from public, anon, authenticated;
+grant execute on function public.admin_create_quote_v2(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, bigint, text, text, text) to service_role;

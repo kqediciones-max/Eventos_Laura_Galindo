@@ -93,7 +93,7 @@ export default async function handler(req, res) {
   const quote = normalizeQuote(body, admin);
   if (!quote) return sendJson(res, 400, { error: 'Revisa el destinatario y las líneas de la cotización.' });
   try {
-    const rows = await supabaseRequest('rpc/admin_create_quote', 'POST', quote);
+    const rows = await supabaseRequest('rpc/admin_create_quote_v2', 'POST', quote);
     return sendJson(res, 201, { quote: rows });
   } catch {
     return sendJson(res, 503, { error: 'No se pudo guardar la cotización.' });
