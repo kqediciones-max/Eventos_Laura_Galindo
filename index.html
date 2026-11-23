@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="home.css?v=20261106-rose-banner">
+  <link rel="stylesheet" href="home.css?v=20261124-mobile-admin">
 </head>
 <body>
   <header class="site-header">
@@ -35,10 +35,13 @@
     <nav class="top-nav" aria-label="Navegación principal">
       <a href="#eventos-realizados">Eventos</a><a href="#catalogo">Catálogo</a><a href="#nosotros">Nosotros</a>
     </nav>
-    <button class="cart-trigger" id="openCart" aria-label="Abrir canasta">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H7M10 21h.01M18 21h.01"/></svg>
-      <span>Mi canasta</span><b id="cartCount">0</b>
-    </button>
+    <div class="header-actions">
+      <a class="admin-top-link" href="admin.html" aria-label="Ir a administración de cotizaciones">Administración</a>
+      <button class="cart-trigger" id="openCart" aria-label="Abrir canasta">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.4a2 2 0 0 0 1.9-1.4L21 9H7M10 21h.01M18 21h.01"/></svg>
+        <span>Mi canasta</span><b id="cartCount">0</b>
+      </button>
+    </div>
   </header>
 
   <main>

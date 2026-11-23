@@ -124,3 +124,24 @@ footer .instagram-link{display:inline-flex;align-items:center;gap:8px;color:var(
 .quote-sprig-left{left:0;bottom:-10px}
 .quote-sprig-right{right:3%;top:-24px;transform:rotate(180deg);opacity:.42}
 @media(max-width:700px){.quote-banner{min-height:0;padding:48px 25px 50px}.quote-banner:after{right:-290px;top:-260px}.quote-sprig{width:125px;opacity:.3}.quote-sprig-left{left:-12px;bottom:-18px}.quote-sprig-right{right:-12px;top:-30px}.quote-banner>div{position:relative}.quote-banner .button{position:relative;margin-top:20px}}
+
+/* Acceso de administración junto al botón de canasta */
+.header-actions{display:flex;align-items:center;gap:9px;flex:0 0 auto}
+.admin-top-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:1px solid #d9c8c1;border-radius:30px;background:#fffdfa;color:#682b3b;font-size:10px;white-space:nowrap;transition:background .18s,border-color .18s}
+.admin-top-link:hover{background:#f7e9e7;border-color:#b99567}
+@media(max-width:700px){
+ .site-header{padding-left:12px;padding-right:12px;gap:8px}
+ .header-actions{gap:5px}
+ .admin-top-link{min-height:38px;padding:0 9px;font-size:8px}
+ .cart-trigger{min-height:38px;padding:7px 8px;gap:6px;font-size:9px;white-space:nowrap}
+ .cart-trigger svg{width:15px}
+ .cart-trigger b{min-width:18px;height:18px}
+}
+@media(max-width:340px){
+ .site-header{padding-left:8px;padding-right:8px}
+ .brand-logo{width:68px}
+ .header-actions{gap:4px}
+ .admin-top-link{padding:0 7px;font-size:8px}
+ .cart-trigger{padding:6px 7px;gap:5px;font-size:8px}
+ .cart-trigger b{min-width:17px;height:17px}
+}
