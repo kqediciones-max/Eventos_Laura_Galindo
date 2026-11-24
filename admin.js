@@ -232,6 +232,7 @@ function copyQuote(quote) {
 
 function loadQuoteEditor(quote) {
   resetQuoteBuilder();
+  activeSaleDocument=null;
   editingQuoteId=quote.id;
   quoteIsDirty=false;
   for(const [field,key] of [['recipientName','recipient_name'],['customerDocument','customer_document'],['phone','phone'],['email','email'],['eventName','event_name'],['eventDate','event_date'],['city','city'],['validityDays','validity_days'],['comments','comments'],['discountPercent','discount_percent'],['paymentMethod','payment_method'],['deposit','deposit']]) quoteBuilder.elements[field].value=quote[key]??'';
@@ -455,6 +456,7 @@ function resetQuoteBuilder() {
   quoteBuilder.elements.requestId.value = '';
   editingQuoteId=null;
   quoteIsDirty=false;
+  activeSaleDocument=null;
   addQuoteLine();
   lastSavedQuote = null;
   $('#quoteActions').hidden = true;
@@ -648,18 +650,68 @@ $('#generateSaleButton').addEventListener('click',()=>{
 $('#closeQuotePreview').addEventListener('click', () => $('#quotePreviewDialog').close());
 $('#quotePreviewDialog').addEventListener('click', (event) => { if (event.target === $('#quotePreviewDialog')) $('#quotePreviewDialog').close(); });
 $('#downloadPdfButton').addEventListener('click', () => { if (lastSavedQuote) window.print(); });
+$('#shareDocumentButton').addEventListener('click',()=>sendDocumentToWhatsApp(lastSavedQuote));
 $('#cancelSaleDraftButton').addEventListener('click', resetQuoteBuilder);
 $('#quoteSearch').addEventListener('input',renderQuotes);$('#saleSearch').addEventListener('input',renderSales);
 document.querySelectorAll('[data-period-for],#eventsDate,#occupancyDate').forEach(el=>el.addEventListener('change',renderDashboards));
 document.querySelectorAll('[data-admin-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-admin-tab]').forEach(x=>x.classList.toggle('is-active',x===button));$('#managementDashboard').hidden=button.dataset.adminTab!=='management';$('#eventsDashboard').hidden=button.dataset.adminTab!=='events';$('#occupancyDashboard').hidden=button.dataset.adminTab!=='occupancy';if(button.dataset.adminTab==='events'||button.dataset.adminTab==='occupancy')renderDashboards()}));
 $('#attachmentInput').addEventListener('change',async(event)=>{if(activeSaleDocument&&event.target.files?.length)await uploadAttachmentFiles([...event.target.files]);event.target.value=''});
 $('#annulSaleButton').addEventListener('click',async()=>{if(!activeSaleDocument||activeSaleDocument.status==='annulled')return;const reason=window.prompt('Indica el motivo de anulación del documento:');if(!reason||reason.trim().length<3)return;try{await api('/api/admin',{method:'POST',body:JSON.stringify({action:'annul-sale',saleId:activeSaleDocument.id,reason:reason.trim()})});await loadData();const updated=salesRows.find(s=>s.id===activeSaleDocument.id);if(updated)await openSalesDocument(updated)}catch(e){feedback($('#pageFeedback'),e.message,true)}});
-$('#sendWhatsAppButton').addEventListener('click', () => {
-  if (!lastSavedQuote?.phone) return;
-  const text = `Hola ${lastSavedQuote.recipient_name}, te compartimos la cotización ${lastSavedQuote.quote_number}. Descarga el PDF desde el panel y adjúntalo a este chat.`;
-  const phone = lastSavedQuote.phone.replace(/\D/g, '');
-  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
-});
+$('#sendWhatsAppButton').addEventListener('click', () => sendDocumentToWhatsApp(lastSavedQuote));
+
+async function sendDocumentToWhatsApp(documentData) {
+  if (!documentData) return;
+  if (!documentData.sale_number && quoteIsDirty) {
+    feedback($('#quoteFeedback'),'Guarda primero los cambios para compartir el PDF actualizado.',true);
+    return;
+  }
+  if (!activeSaleDocument && !$('#quotePreviewDialog').open) {
+    if (documentData.sale_number) await openSalesDocument(documentData);
+    else printQuote(documentData);
+  }
+  if (!documentData.phone) { feedback($('#pageFeedback'),'Agrega el teléfono del cliente antes de abrir WhatsApp.',true); return; }
+  const isSale=Boolean(documentData.sale_number);
+  const number=isSale?documentData.sale_number:documentData.quote_number;
+  const kind=isSale?'documento de venta':'cotización';
+  const fileName=`${(number||'Laura-Galindo').replace(/[^a-z0-9_-]/gi,'_')}.pdf`;
+  const phone=whatsAppPhone(documentData.phone);
+  const message=`Hola ${documentData.recipient_name}, te compartimos el PDF de tu ${kind} ${number}.`;
+  const directUrl=`https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  let nativeShare=false;
+  try { nativeShare=Boolean(navigator.share&&navigator.canShare&&navigator.canShare({files:[new File([''],fileName,{type:'application/pdf'})]})); } catch {}
+  const fallbackWindow=nativeShare?null:window.open('about:blank','_blank');
+  const controls=[$('#sendWhatsAppButton'),$('#shareDocumentButton')];controls.forEach(button=>button.disabled=true);
+  feedback($('#pageFeedback'),'Preparando el PDF…');
+  try {
+    const pdf=await buildDocumentPdf(fileName);
+    const file=new File([pdf],fileName,{type:'application/pdf'});
+    if(nativeShare&&navigator.canShare({files:[file]})) {
+      if(fallbackWindow&&!fallbackWindow.closed)fallbackWindow.close();
+      await navigator.share({files:[file],title:`${kind} ${number}`,text:`${message} Destinatario: ${documentData.phone}`});
+      feedback($('#pageFeedback'),'Selecciona WhatsApp en el menú para compartir el PDF.');
+      return;
+    }
+    downloadBlob(pdf,fileName);
+    if(fallbackWindow&&!fallbackWindow.closed)fallbackWindow.location.href=directUrl;
+    else window.location.assign(directUrl);
+    feedback($('#pageFeedback'),'PDF descargado y chat de WhatsApp abierto. Adjunta el archivo descargado al mensaje.');
+  } catch(error) {
+    if(fallbackWindow&&!fallbackWindow.closed)fallbackWindow.close();
+    if(error?.name==='AbortError')return;
+    feedback($('#pageFeedback'),`No se pudo preparar el PDF. Puedes usar “Imprimir / Guardar PDF” y adjuntarlo en WhatsApp. ${error.message||''}`,true);
+  } finally { controls.forEach(button=>button.disabled=false); }
+}
+
+async function buildDocumentPdf(fileName) {
+  if(typeof window.html2pdf!=='function')throw new Error('No cargó el generador de PDF.');
+  const images=[...$('#printDocument').querySelectorAll('img')];
+  await Promise.all(images.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.addEventListener('load',resolve,{once:true});img.addEventListener('error',resolve,{once:true});setTimeout(resolve,8000)})));
+  const options={margin:[8,8,10,8],filename:fileName,image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',imageTimeout:12000,onclone:(clonedDocument)=>{const article=clonedDocument.querySelector('#printDocument');if(article){article.style.minHeight='0';article.style.margin='0 auto';article.style.boxShadow='none'}}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['.print-info-box','.print-totals','.print-attachments figure']}};
+  return window.html2pdf().set(options).from($('#printDocument')).outputPdf('blob');
+}
+
+function downloadBlob(blob,fileName){const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=fileName;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000)}
+function whatsAppPhone(value){const digits=String(value||'').replace(/\D/g,'');return digits.length===10?`57${digits}`:digits}
 
 addQuoteLine();
 const today = new Date().toISOString().slice(0,10); $('#eventsDate').value=today; $('#occupancyDate').value=today;

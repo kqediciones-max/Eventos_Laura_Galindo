@@ -76,7 +76,7 @@
   </main>
 
   <dialog class="quote-preview-dialog" id="quotePreviewDialog" aria-label="Vista previa de cotización">
-    <div class="quote-preview-toolbar"><span id="previewToolbarTitle">Vista previa · Cotización formal</span><div><button class="admin-button admin-button-quiet" type="button" id="annulSaleButton" hidden>Anular documento</button><button class="admin-button admin-button-outline" type="button" id="closeQuotePreview">Cerrar</button><button class="admin-button admin-button-primary" type="button" id="downloadPdfButton">Imprimir / Guardar PDF</button></div></div>
+    <div class="quote-preview-toolbar"><span id="previewToolbarTitle">Vista previa · Cotización formal</span><div><button class="admin-button admin-button-quiet" type="button" id="annulSaleButton" hidden>Anular documento</button><button class="admin-button admin-button-outline" type="button" id="shareDocumentButton">Enviar PDF por WhatsApp</button><button class="admin-button admin-button-outline" type="button" id="closeQuotePreview">Cerrar</button><button class="admin-button admin-button-primary" type="button" id="downloadPdfButton">Imprimir / Guardar PDF</button></div></div>
     <article class="print-document" id="printDocument" aria-label="Cotización formal">
       <div class="print-annulled" id="printAnnulled" hidden>DOCUMENTO ANULADO · <span id="printAnnulmentReason"></span></div>
       <header class="print-header"><img src="assets/logo-laura-galindo-visible.png" alt="Logo Laura Galindo"><div class="company-heading"><h1>CASA DE EVENTOS LAURA GALINDO</h1><p>NIT 1.110.513.001-1</p><p>Tel: 313 448 6683 / 322 703 9197</p><p>Calle 68 # 2-70, Arkaniza 1</p></div></header>
@@ -101,6 +101,7 @@
 
   <script src="config.js"></script>
   <script src="catalogo.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="admin.js"></script>
 </body>
 </html>
