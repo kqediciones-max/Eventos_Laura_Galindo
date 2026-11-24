@@ -163,6 +163,32 @@ export default async function handler(req, res) {
     }
   }
 
+  if (body?.action === 'update-quote') {
+    const quoteId = safeText(body.quoteId, 40);
+    if (!/^[0-9a-f-]{36}$/i.test(quoteId)) return sendJson(res, 400, { error: 'Identificador de cotización no válido.' });
+    const quote = normalizeQuote(body, admin);
+    if (!quote) return sendJson(res, 400, { error: 'Revisa el destinatario y las líneas de la cotización.' });
+    try {
+      const linked = await supabaseRequest('sales_documents', 'GET', undefined, `?select=id&quote_id=eq.${quoteId}&limit=1`);
+      if (linked?.length) return sendJson(res, 409, { error: 'La cotización ya tiene un documento de venta y no se puede editar.' });
+      const exists = await supabaseRequest('quotes', 'GET', undefined, `?select=id&id=eq.${quoteId}&limit=1`);
+      if (!exists?.length) return sendJson(res, 404, { error: 'No se encontró la cotización.' });
+      const values = {
+        recipient_name: quote.p_recipient_name, phone: quote.p_phone, customer_document: quote.p_customer_document,
+        email: quote.p_email, event_name: quote.p_event_name, event_date: quote.p_event_date, city: quote.p_city,
+        validity_days: quote.p_validity_days, comments: quote.p_comments, items: quote.p_items, subtotal: quote.p_subtotal,
+        discount_percent: quote.p_discount_percent, discount_amount: quote.p_discount_amount, iva_percent: quote.p_iva_percent,
+        iva_amount: quote.p_iva_amount, tax_type: quote.p_tax_type, tax_percent: quote.p_tax_percent,
+        tax_amount: quote.p_tax_amount, total: quote.p_total, payment_method: quote.p_payment_method, deposit: quote.p_deposit
+      };
+      await supabaseRequest(`quotes?id=eq.${quoteId}`, 'PATCH', values);
+      const rows = await supabaseRequest('quotes', 'GET', undefined, `?select=*&id=eq.${quoteId}&limit=1`);
+      return sendJson(res, 200, { quote: rows?.[0] });
+    } catch {
+      return sendJson(res, 503, { error: 'No se pudieron guardar los cambios de la cotización.' });
+    }
+  }
+
   if (body?.action === 'annul-sale') {
     const saleId = safeText(body.saleId, 40);
     const reason = safeText(body.reason, 1000);

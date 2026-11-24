@@ -11,6 +11,8 @@ let salesRows = [];
 let activeUser = null;
 let lastSavedQuote = null;
 let pendingSaleQuoteId = null;
+let editingQuoteId = null;
+let quoteIsDirty = false;
 let activeSaleDocument = null;
 let activeAttachments = [];
 
@@ -186,20 +188,17 @@ function renderQuotes() {
     const sale = salesRows.find((row) => row.quote_id === quote.id);
     if (sale) {
       const saleButton = document.createElement('button'); saleButton.type = 'button'; saleButton.className = 'admin-button admin-button-primary'; saleButton.textContent = `Ver ${sale.sale_number}`; saleButton.addEventListener('click', () => openSalesDocument(sale)); actions.append(saleButton);
+    } else {
+      const editButton=document.createElement('button');editButton.type='button';editButton.className='admin-button admin-button-outline';editButton.textContent='Ver';editButton.setAttribute('aria-label',`Ver y editar cotización ${quote.quote_number}`);editButton.addEventListener('click',()=>loadQuoteEditor(quote));actions.append(editButton);
     }
     const copyButton = document.createElement('button'); copyButton.type = 'button'; copyButton.className = 'admin-button admin-button-outline'; copyButton.textContent = 'Copiar'; copyButton.addEventListener('click', () => copyQuote(quote)); actions.append(copyButton);
-    const viewButton = document.createElement('button');
-    viewButton.type = 'button';
-    viewButton.className = 'admin-button admin-button-outline';
-    viewButton.textContent = 'Ver PDF';
-    viewButton.addEventListener('click', () => printQuote(quote));
     const deleteButton = document.createElement('button');
     deleteButton.type = 'button';
     deleteButton.className = 'admin-button admin-button-quiet';
     deleteButton.textContent = 'Eliminar';
     deleteButton.setAttribute('aria-label', `Eliminar cotización ${quote.quote_number}`);
     deleteButton.addEventListener('click', () => deleteQuote(quote));
-    if (!sale) actions.append(viewButton, deleteButton);
+    if (!sale) actions.append(deleteButton);
     card.append(copy, actions);
     list.append(card);
   }
@@ -229,6 +228,17 @@ function copyQuote(quote) {
   if (quote.tax_type) { quoteBuilder.elements.includeTaxes.checked=true; $('#taxTypeField').hidden=false; quoteBuilder.elements.taxType.disabled=false; quoteBuilder.elements.taxType.value=quote.tax_type; }
   quoteLines.replaceChildren(); (quote.items||[]).forEach((item)=>addQuoteLine(item,{prepend:false,focus:false})); if (!quote.items?.length) addQuoteLine({},{prepend:false,focus:false});
   $('#quoteTitle').textContent=`Copiar ${quote.quote_number}`; $('#quoteBuilder').scrollIntoView({behavior:'smooth',block:'start'}); updateTotal();
+}
+
+function loadQuoteEditor(quote) {
+  resetQuoteBuilder();
+  editingQuoteId=quote.id;
+  quoteIsDirty=false;
+  for(const [field,key] of [['recipientName','recipient_name'],['customerDocument','customer_document'],['phone','phone'],['email','email'],['eventName','event_name'],['eventDate','event_date'],['city','city'],['validityDays','validity_days'],['comments','comments'],['discountPercent','discount_percent'],['paymentMethod','payment_method'],['deposit','deposit']]) quoteBuilder.elements[field].value=quote[key]??'';
+  if(quote.tax_type){quoteBuilder.elements.includeTaxes.checked=true;$('#taxTypeField').hidden=false;quoteBuilder.elements.taxType.disabled=false;quoteBuilder.elements.taxType.value=quote.tax_type;}
+  quoteLines.replaceChildren();(quote.items||[]).forEach(item=>addQuoteLine(item,{prepend:false,focus:false}));if(!quote.items?.length)addQuoteLine({},{prepend:false,focus:false});
+  lastSavedQuote=quote;$('#quoteActions').hidden=false;$('#sendWhatsAppButton').hidden=!quote.phone;$('#generateSaleButton').hidden=false;$('#quoteActionNote').textContent='Revisa o edita la información. Guarda los cambios antes de generar el documento de venta.';
+  $('#saveQuoteButton').textContent='Guardar cambios';$('#quoteTitle').textContent=`Ver / editar ${quote.quote_number}`;$('#quoteBuilder').scrollIntoView({behavior:'smooth',block:'start'});updateTotal();
 }
 
 function renderDashboards() {
@@ -265,6 +275,7 @@ async function uploadAttachmentFiles(files){for(const file of files){if(!['image
 async function compressAttachment(file){const bitmap=await createImageBitmap(file);let scale=Math.min(1,1800/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');let blob;do{canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.78));scale*=0.85}while(blob&&blob.size>3*1024*1024&&scale>0.35);bitmap.close();if(!blob||blob.size>3*1024*1024)throw new Error('No se pudo reducir a menos de 3 MB.');return blob}
 
 function startSaleFromQuote(quote){
+  if(!window.confirm('Al generar el documento de venta quedará asociado a esta cotización y ya no podrás editarla ni eliminarla. El documento solo podrá anularse; para corregirlo tendrás que iniciar una nueva cotización desde cero. ¿Deseas continuar?'))return;
   pendingSaleQuoteId=quote.id;resetQuoteBuilder();pendingSaleQuoteId=quote.id;
   for(const [field,key] of [['recipientName','recipient_name'],['customerDocument','customer_document'],['phone','phone'],['email','email'],['eventName','event_name'],['eventDate','event_date'],['city','city'],['validityDays','validity_days'],['comments','comments'],['discountPercent','discount_percent'],['paymentMethod','payment_method'],['deposit','deposit']]) quoteBuilder.elements[field].value=quote[key]??'';
   if(quote.tax_type){quoteBuilder.elements.includeTaxes.checked=true;$('#taxTypeField').hidden=false;quoteBuilder.elements.taxType.disabled=false;quoteBuilder.elements.taxType.value=quote.tax_type;}
@@ -394,7 +405,7 @@ function addQuoteLine(item = {}, { prepend = true, focus = true } = {}) {
   remove.className = 'remove-line';
   remove.textContent = '×';
   remove.setAttribute('aria-label', 'Quitar este ítem');
-  remove.addEventListener('click', () => { row.remove(); updateTotal(); });
+  remove.addEventListener('click', () => { row.remove(); if(editingQuoteId)quoteIsDirty=true; updateTotal(); });
   row.append(itemLabel, customNameLabel, quantityLabel, priceLabel, noteLabel, remove);
   for (const control of row.querySelectorAll('input,select')) control.addEventListener('input', updateTotal);
   if (prepend) quoteLines.prepend(row);
@@ -433,7 +444,7 @@ quoteBuilder.elements.includeTaxes.addEventListener('change', () => {
 });
 quoteBuilder.elements.taxType.addEventListener('change', updateTotal);
 
-$('#addLineButton').addEventListener('click', () => addQuoteLine());
+$('#addLineButton').addEventListener('click', () => { addQuoteLine(); if(editingQuoteId)quoteIsDirty=true; });
 $('#newQuoteButton').addEventListener('click', () => resetQuoteBuilder());
 
 function resetQuoteBuilder() {
@@ -442,10 +453,13 @@ function resetQuoteBuilder() {
   quoteBuilder.elements.taxType.disabled = true;
   quoteLines.replaceChildren();
   quoteBuilder.elements.requestId.value = '';
+  editingQuoteId=null;
+  quoteIsDirty=false;
   addQuoteLine();
   lastSavedQuote = null;
   $('#quoteActions').hidden = true;
   $('#quoteTitle').textContent = 'Preparar cotización';
+  $('#quoteActionNote').textContent='Abre la vista formal y descarga el PDF desde allí.';
   $('#saleFields').hidden=true;quoteBuilder.elements.reservedFrom.required=false;quoteBuilder.elements.reservedUntil.required=false;
   $('#saveQuoteButton').textContent='Guardar cotización';$('#cancelSaleDraftButton').hidden=true;pendingSaleQuoteId=null;
   feedback($('#quoteFeedback'), '');
@@ -469,6 +483,8 @@ function prepareFromRequest(row) {
 
 quoteBuilder.addEventListener('input', updateTotal);
 quoteBuilder.addEventListener('change', updateTotal);
+quoteBuilder.addEventListener('input',()=>{if(editingQuoteId)quoteIsDirty=true});
+quoteBuilder.addEventListener('change',()=>{if(editingQuoteId)quoteIsDirty=true});
 quoteBuilder.addEventListener('submit', async (event) => {
   event.preventDefault();
   const items = [...quoteLines.querySelectorAll('.quote-line')].map((line) => {
@@ -505,7 +521,8 @@ quoteBuilder.addEventListener('submit', async (event) => {
     return;
   }
   const data = {
-    action: pendingSaleQuoteId ? 'create-sale' : 'create-quote',
+    action: pendingSaleQuoteId ? 'create-sale' : editingQuoteId ? 'update-quote' : 'create-quote',
+    quoteId: pendingSaleQuoteId || editingQuoteId,
     quoteId: pendingSaleQuoteId,
     reservedFrom: quoteBuilder.elements.reservedFrom.value,
     reservedUntil: quoteBuilder.elements.reservedUntil.value,
@@ -527,13 +544,16 @@ quoteBuilder.addEventListener('submit', async (event) => {
   };
   const button = $('#saveQuoteButton');
   button.disabled = true;
-  feedback($('#quoteFeedback'), pendingSaleQuoteId ? 'Generando el documento de venta…' : 'Guardando la cotización…');
+  feedback($('#quoteFeedback'), pendingSaleQuoteId ? 'Generando el documento de venta…' : editingQuoteId ? 'Guardando cambios…' : 'Guardando la cotización…');
   try {
     const result = await api('/api/admin', { method: 'POST', body: JSON.stringify(data) });
     const saved = result.quote || result.salesDocument;
     lastSavedQuote = saved;
+    if(result.quote){editingQuoteId=saved.id;quoteIsDirty=false;$('#saveQuoteButton').textContent='Guardar cambios';}
     $('#quoteActions').hidden = false;
     $('#sendWhatsAppButton').hidden = !saved.phone;
+    $('#generateSaleButton').hidden=Boolean(result.salesDocument)||salesRows.some(s=>s.quote_id===saved.id);
+    $('#quoteActionNote').textContent=result.salesDocument?'Documento de venta generado y asociado a la cotización.':'Revisa o edita los datos. Guarda los cambios antes de generar la venta.';
     renderPrintDocument(saved);
     if (result.salesDocument) { pendingSaleQuoteId=null; $('#saleFields').hidden=true; quoteBuilder.elements.reservedFrom.required=false; quoteBuilder.elements.reservedUntil.required=false; $('#saveQuoteButton').textContent='Guardar cotización'; $('#cancelSaleDraftButton').hidden=true; feedback($('#quoteFeedback'), `Documento de venta ${saved.sale_number} generado.`); }
     else feedback($('#quoteFeedback'), `Cotización ${saved.quote_number} guardada.`);
@@ -619,6 +639,12 @@ function printQuote(quote) {
 }
 
 $('#viewQuoteButton').addEventListener('click', () => { if (lastSavedQuote) printQuote(lastSavedQuote); });
+$('#generateSaleButton').addEventListener('click',()=>{
+  if(!editingQuoteId||!lastSavedQuote)return;
+  if(quoteIsDirty){feedback($('#quoteFeedback'),'Guarda primero los cambios para que el documento de venta se genere con la información actual.',true);$('#quoteBuilder').scrollIntoView({behavior:'smooth',block:'start'});return;}
+  const quote=quoteRows.find(row=>row.id===editingQuoteId)||lastSavedQuote;
+  startSaleFromQuote(quote);
+});
 $('#closeQuotePreview').addEventListener('click', () => $('#quotePreviewDialog').close());
 $('#quotePreviewDialog').addEventListener('click', (event) => { if (event.target === $('#quotePreviewDialog')) $('#quotePreviewDialog').close(); });
 $('#downloadPdfButton').addEventListener('click', () => { if (lastSavedQuote) window.print(); });

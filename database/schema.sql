@@ -193,6 +193,21 @@ do $$ begin
   end if;
 end $$;
 
+create or replace function public.protect_linked_quote_update() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if exists (select 1 from public.sales_documents where quote_id = old.id) then
+    raise exception 'La cotización tiene un documento de venta asociado y no se puede editar.';
+  end if;
+  return new;
+end;
+$$;
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'quotes_sales_document_update_guard' and tgrelid = 'public.quotes'::regclass) then
+    create trigger quotes_sales_document_update_guard before update on public.quotes for each row execute function public.protect_linked_quote_update();
+  end if;
+end $$;
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('sales-doc-attachments', 'sales-doc-attachments', false, 5242880, array['image/jpeg','image/png','image/webp'])
 on conflict (id) do nothing;
