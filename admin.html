@@ -35,9 +35,25 @@
     <section id="adminApp" hidden>
       <div class="admin-welcome"><div><span class="admin-eyebrow">CENTRO DE ATENCIÓN</span><h1>Hola, <span id="adminName"></span></h1><p>Solicitudes de clientes y cotizaciones en un solo lugar.</p></div><button class="admin-button admin-button-primary" id="newQuoteButton" type="button">Nueva cotización</button></div>
       <div class="admin-stats" aria-label="Resumen"><article><span>Solicitudes pendientes</span><strong id="pendingCount">0</strong></article><article><span>Cotizaciones guardadas</span><strong id="quoteCount">0</strong></article><article><span>Con respuesta enviada</span><strong id="answeredCount">0</strong></article></div>
-      <nav class="admin-tabs" aria-label="Secciones administrativas"><button type="button" data-admin-tab="management" class="is-active">Gestión</button><button type="button" data-admin-tab="events">Eventos vendidos</button><button type="button" data-admin-tab="occupancy">Ocupación de mobiliario</button></nav>
+      <nav class="admin-tabs" aria-label="Secciones administrativas"><button type="button" data-admin-tab="management" class="is-active">Gestión</button><button type="button" data-admin-tab="events">Eventos vendidos</button><button type="button" data-admin-tab="occupancy">Ocupación de mobiliario</button><button type="button" data-admin-tab="payments">Pagos</button></nav>
       <section class="admin-dashboard" id="eventsDashboard" hidden><div class="panel-heading"><div><span class="admin-eyebrow">AGENDA CONFIRMADA</span><h2>Eventos con documento de venta</h2></div><div class="dashboard-filters"><select data-period-for="events" aria-label="Filtrar eventos por"><option value="month">Mes</option><option value="week">Semana</option><option value="day">Día</option></select><input type="date" id="eventsDate" aria-label="Fecha para filtrar eventos"></div></div><div id="eventsList" class="dashboard-list"></div></section>
       <section class="admin-dashboard" id="occupancyDashboard" hidden><div class="panel-heading"><div><span class="admin-eyebrow">BODEGA</span><h2>Ocupación de mobiliario</h2></div><div class="dashboard-filters"><select data-period-for="occupancy" aria-label="Filtrar ocupación por"><option value="month">Mes</option><option value="week">Semana</option><option value="day">Día</option></select><input type="date" id="occupancyDate" aria-label="Fecha para filtrar ocupación"></div></div><div id="occupancyList" class="dashboard-list"></div></section>
+      <section class="admin-dashboard payments-dashboard" id="paymentsDashboard" hidden>
+        <div class="panel-heading"><div><span class="admin-eyebrow">CONTROL DE CAJA</span><h2>Pagos y saldos</h2></div><button class="admin-button admin-button-outline" id="refreshPaymentsButton" type="button">Actualizar</button></div>
+        <div class="payment-summary" aria-label="Resumen de pagos"><article><span>Por cobrar</span><strong id="paymentsOutstanding">$ 0</strong></article><article><span>Recaudo neto</span><strong id="paymentsCollected">$ 0</strong></article><article><span>Facturas pendientes</span><strong id="paymentsPendingCount">0</strong></article><article><span>Facturas saldadas</span><strong id="paymentsSettledCount">0</strong></article></div>
+        <p class="payment-calculation-note">El saldo se calcula con el valor del documento, más cobros adicionales y devoluciones, menos abonos y pagos registrados.</p>
+        <label class="search-label">Buscar por número, cliente, evento o teléfono<input type="search" id="paymentsSearch" placeholder="Ej. VTA-2026, Laura, boda…"></label>
+        <div id="paymentFormContainer" class="payment-form-container" hidden>
+          <div class="panel-heading"><div><span class="admin-eyebrow">NUEVO MOVIMIENTO</span><h3 id="paymentFormTitle">Registrar movimiento</h3></div><button class="admin-button admin-button-quiet" id="closePaymentForm" type="button">Cerrar</button></div>
+          <form id="paymentForm" class="admin-form payment-form">
+            <label>Documento de venta<select name="saleId" id="paymentSaleSelect" required></select></label>
+            <div id="paymentBalanceHint" class="payment-balance-hint"></div>
+            <div class="form-grid"><label>Tipo de movimiento<select name="movementType" id="paymentType" required><option value="installment">Abono</option><option value="full_payment">Pago total</option><option value="refund">Devolución</option><option value="additional_charge">Cobro adicional no considerado</option></select></label><label>Valor (COP)<input name="amount" id="paymentAmount" type="number" min="1" step="1" required placeholder="Valor del movimiento"></label><label>Fecha del movimiento<input name="movementDate" id="paymentDate" type="date" required></label><label>Detalle / referencia<input name="note" maxlength="500" placeholder="Opcional"></label></div>
+            <div class="payment-form-actions"><button class="admin-button admin-button-primary" type="submit" id="savePaymentButton">Guardar movimiento</button><p class="admin-feedback" id="paymentFeedback" role="status" aria-live="polite"></p></div>
+          </form>
+        </div>
+        <div id="paymentsList" class="payment-list"></div>
+      </section>
       <div id="managementDashboard">
       <div class="admin-workspace">
         <section class="admin-panel requests-panel" aria-labelledby="requestsTitle">

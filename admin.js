@@ -8,6 +8,7 @@ const money = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP
 let requestRows = [];
 let quoteRows = [];
 let salesRows = [];
+let paymentMovements = [];
 let activeUser = null;
 let lastSavedQuote = null;
 let pendingSaleQuoteId = null;
@@ -43,6 +44,7 @@ async function checkSession() {
     requestRows = data.requests || [];
     quoteRows = data.quotes || [];
     salesRows = data.salesDocuments || [];
+    paymentMovements = data.salesDocumentMovements || [];
     renderLists();
   } catch (error) {
     if (error.message && !error.message.includes('401') && !error.message.includes('404')) {
@@ -89,6 +91,7 @@ async function loadData() {
     requestRows = data.requests || [];
     quoteRows = data.quotes || [];
     salesRows = data.salesDocuments || [];
+    paymentMovements = data.salesDocumentMovements || [];
     renderLists();
     feedback($('#pageFeedback'), 'Información actualizada.');
   } catch (error) {
@@ -255,6 +258,57 @@ function renderDashboards() {
   for(const group of groups.values()){const card=document.createElement('article');card.className='dashboard-card';const h=document.createElement('h3');h.textContent=`${group.name} · ${group.quantity} unidades`;const p=document.createElement('p');p.textContent=`Reservado entre ${formatDate(os)} y ${formatDate(oe)}`;card.append(h,p);for(const {sale,item} of group.docs){const b=document.createElement('button');b.type='button';b.className='occupancy-link';b.textContent=`${item.quantity} × ${sale.sale_number} · ${sale.event_name||'Evento'} · ${sale.recipient_name} (${formatDate(sale.reserved_from)}–${formatDate(sale.reserved_until)})`;b.addEventListener('click',()=>openSalesDocument(sale));card.append(b)}list.append(card)}
 }
 
+function paymentTotals(sale){
+  const rows=paymentMovements.filter(row=>row.sales_document_id===sale.id);
+  const totals=rows.reduce((acc,row)=>{const value=Number(row.amount)||0;if(row.movement_type==='installment'||row.movement_type==='full_payment')acc.received+=value;else if(row.movement_type==='refund')acc.refunded+=value;else if(row.movement_type==='additional_charge')acc.charges+=value;return acc},{received:0,refunded:0,charges:0});
+  totals.netReceived=totals.received-totals.refunded;
+  totals.balance=Number(sale.total||0)+totals.charges+totals.refunded-totals.received;
+  return {...totals,rows};
+}
+
+const movementNames={installment:'Abono',full_payment:'Pago total',refund:'Devolución',additional_charge:'Cobro adicional no considerado'};
+function renderPayments(){
+  const list=$('#paymentsList');if(!list)return;list.replaceChildren();
+  const active=salesRows.filter(s=>s.status==='active');const totals=active.map(paymentTotals);
+  $('#paymentsOutstanding').textContent=money.format(totals.reduce((sum,t)=>sum+Math.max(0,t.balance),0));
+  $('#paymentsCollected').textContent=money.format(totals.reduce((sum,t)=>sum+t.netReceived,0));
+  $('#paymentsPendingCount').textContent=totals.filter(t=>t.balance>0).length;
+  $('#paymentsSettledCount').textContent=totals.filter(t=>t.balance<=0).length;
+  const search=($('#paymentsSearch').value||'').toLowerCase().trim();
+  const rows=salesRows.filter(s=>[s.sale_number,s.recipient_name,s.event_name,s.phone,s.event_date].join(' ').toLowerCase().includes(search)).sort((a,b)=>(b.created_at||'').localeCompare(a.created_at||''));
+  if(!rows.length){list.innerHTML='<p class="empty-note">No hay documentos de venta que coincidan.</p>';return;}
+  for(const sale of rows){
+    const t=paymentTotals(sale);const card=document.createElement('article');card.className='payment-card';
+    const header=document.createElement('div');header.className='payment-card-header';const titleWrap=document.createElement('div');const title=document.createElement('h3');title.textContent=`${sale.sale_number} · ${sale.recipient_name}`;const meta=document.createElement('p');meta.textContent=`${sale.event_name||'Evento'} · ${formatDate(sale.event_date)}${sale.phone?` · ${sale.phone}`:''}`;titleWrap.append(title,meta);
+    const badge=document.createElement('span');badge.className=`payment-status ${sale.status==='annulled'?'is-annulled':t.balance<=0?'is-settled':'is-pending'}`;badge.textContent=sale.status==='annulled'?'Anulada':t.balance<=0?'Saldada':'Saldo pendiente';header.append(titleWrap,badge);card.append(header);
+    const view=document.createElement('button');view.type='button';view.className='admin-button admin-button-quiet payment-view-document';view.textContent='Ver documento de venta';view.addEventListener('click',()=>openSalesDocument(sale));card.append(view);
+    const metrics=document.createElement('div');metrics.className='payment-metrics';for(const [label,value] of [['Valor documento',money.format(Number(sale.total)||0)],['Cobros adicionales',money.format(t.charges)],['Pagado neto',money.format(t.netReceived)],['Saldo pendiente',money.format(Math.max(0,t.balance))]]){const metric=document.createElement('div');const small=document.createElement('span');small.textContent=label;const strong=document.createElement('strong');strong.textContent=value;metric.append(small,strong);metrics.append(metric)}card.append(metrics);
+    if(sale.status==='active'){const add=document.createElement('button');add.type='button';add.className='admin-button admin-button-outline';add.textContent='Registrar movimiento';add.addEventListener('click',()=>openPaymentForm(sale));card.append(add)}
+    const history=document.createElement('div');history.className='payment-history';const heading=document.createElement('h4');heading.textContent='Movimientos';history.append(heading);
+    if(!t.rows.length){const empty=document.createElement('p');empty.className='empty-note';empty.textContent='Todavía no hay pagos registrados.';history.append(empty)}else{
+      const sorted=[...t.rows].sort((a,b)=>b.movement_date.localeCompare(a.movement_date)||b.created_at.localeCompare(a.created_at));
+      for(const movement of sorted){const entry=document.createElement('div');entry.className=`payment-movement movement-${movement.movement_type}`;const info=document.createElement('div');const label=document.createElement('strong');label.textContent=movementNames[movement.movement_type]||movement.movement_type;const detail=document.createElement('span');detail.textContent=`${formatDate(movement.movement_date)} · ${movement.created_by}${movement.note?` · ${movement.note}`:''}`;info.append(label,detail);const value=document.createElement('strong');value.textContent=money.format(Number(movement.amount)||0);entry.append(info,value);history.append(entry)}
+    }
+    card.append(history);list.append(card);
+  }
+}
+
+function openPaymentForm(sale){
+  const select=$('#paymentSaleSelect');select.replaceChildren();const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Selecciona el documento';select.append(placeholder);
+  for(const row of salesRows.filter(r=>r.status==='active')){const option=document.createElement('option');option.value=row.id;option.textContent=`${row.sale_number} · ${row.recipient_name} · ${money.format(Number(row.total)||0)}`;select.append(option)}
+  select.value=sale?.id||'';$('#paymentDate').value=new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);$('#paymentType').value='installment';$('#paymentAmount').value='';$('#paymentForm').elements.note.value='';$('#paymentFeedback').textContent='';$('#paymentFormTitle').textContent=sale?`Movimiento · ${sale.sale_number}`:'Registrar movimiento';$('#paymentFormContainer').hidden=false;updatePaymentForm();$('#paymentFormContainer').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function updatePaymentForm(){
+  const sale=salesRows.find(row=>row.id===$('#paymentSaleSelect').value);const type=$('#paymentType').value;const amount=$('#paymentAmount');
+  if(!sale){$('#paymentBalanceHint').textContent='Selecciona un documento para consultar su saldo.';amount.removeAttribute('max');return;}
+  const t=paymentTotals(sale);$('#paymentBalanceHint').textContent=`Saldo actual: ${money.format(Math.max(0,t.balance))} · Neto recibido: ${money.format(t.netReceived)} · Cobros adicionales: ${money.format(t.charges)}`;
+  if(type==='full_payment'){amount.value=t.balance>0?String(Math.round(t.balance)):'';amount.max=String(Math.max(0,t.balance))}
+  else if(type==='installment')amount.max=String(Math.max(0,t.balance));
+  else if(type==='refund')amount.max=String(Math.max(0,t.netReceived));
+  else amount.removeAttribute('max');
+}
+
 async function openSalesDocument(sale) {
   activeSaleDocument=sale; lastSavedQuote=sale; activeAttachments=[];
   renderPrintDocument(sale,true);
@@ -289,6 +343,7 @@ function startSaleFromQuote(quote){
 function renderLists() {
   renderRequests();
   renderQuotes();
+  renderPayments();
 }
 
 async function deleteQuote(quote) {
@@ -654,7 +709,19 @@ $('#shareDocumentButton').addEventListener('click',()=>sendDocumentToWhatsApp(la
 $('#cancelSaleDraftButton').addEventListener('click', resetQuoteBuilder);
 $('#quoteSearch').addEventListener('input',renderQuotes);$('#saleSearch').addEventListener('input',renderSales);
 document.querySelectorAll('[data-period-for],#eventsDate,#occupancyDate').forEach(el=>el.addEventListener('change',renderDashboards));
-document.querySelectorAll('[data-admin-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-admin-tab]').forEach(x=>x.classList.toggle('is-active',x===button));$('#managementDashboard').hidden=button.dataset.adminTab!=='management';$('#eventsDashboard').hidden=button.dataset.adminTab!=='events';$('#occupancyDashboard').hidden=button.dataset.adminTab!=='occupancy';if(button.dataset.adminTab==='events'||button.dataset.adminTab==='occupancy')renderDashboards()}));
+document.querySelectorAll('[data-admin-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-admin-tab]').forEach(x=>x.classList.toggle('is-active',x===button));$('#managementDashboard').hidden=button.dataset.adminTab!=='management';$('#eventsDashboard').hidden=button.dataset.adminTab!=='events';$('#occupancyDashboard').hidden=button.dataset.adminTab!=='occupancy';$('#paymentsDashboard').hidden=button.dataset.adminTab!=='payments';if(button.dataset.adminTab==='events'||button.dataset.adminTab==='occupancy')renderDashboards();if(button.dataset.adminTab==='payments')renderPayments()}));
+$('#refreshPaymentsButton').addEventListener('click',loadData);
+$('#paymentsSearch').addEventListener('input',renderPayments);
+$('#paymentSaleSelect').addEventListener('change',updatePaymentForm);
+$('#paymentType').addEventListener('change',updatePaymentForm);
+$('#closePaymentForm').addEventListener('click',()=>{$('#paymentFormContainer').hidden=true});
+$('#paymentForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();const form=event.currentTarget;const button=$('#savePaymentButton');button.disabled=true;feedback($('#paymentFeedback'),'Guardando movimiento…');
+  const data={action:'create-payment-movement',saleId:form.elements.saleId.value,movementType:form.elements.movementType.value,amount:Number(form.elements.amount.value),movementDate:form.elements.movementDate.value,note:form.elements.note.value};
+  try{await api('/api/admin',{method:'POST',body:JSON.stringify(data)});$('#paymentFormContainer').hidden=true;form.reset();await loadData();feedback($('#pageFeedback'),'Movimiento de pago registrado.');}
+  catch(error){feedback($('#paymentFeedback'),error.message,true)}
+  finally{button.disabled=false}
+});
 $('#attachmentInput').addEventListener('change',async(event)=>{if(activeSaleDocument&&event.target.files?.length)await uploadAttachmentFiles([...event.target.files]);event.target.value=''});
 $('#annulSaleButton').addEventListener('click',async()=>{if(!activeSaleDocument||activeSaleDocument.status==='annulled')return;const reason=window.prompt('Indica el motivo de anulación del documento:');if(!reason||reason.trim().length<3)return;try{await api('/api/admin',{method:'POST',body:JSON.stringify({action:'annul-sale',saleId:activeSaleDocument.id,reason:reason.trim()})});await loadData();const updated=salesRows.find(s=>s.id===activeSaleDocument.id);if(updated)await openSalesDocument(updated)}catch(e){feedback($('#pageFeedback'),e.message,true)}});
 $('#sendWhatsAppButton').addEventListener('click', () => sendDocumentToWhatsApp(lastSavedQuote));

@@ -74,10 +74,11 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
-      const [requests, quotes, salesDocuments] = await Promise.all([
+      const [requests, quotes, salesDocuments, salesDocumentMovements] = await Promise.all([
         supabaseRequest('quote_requests', 'GET', undefined, '?select=*&order=created_at.desc&limit=250'),
         supabaseRequest('quotes', 'GET', undefined, '?select=*&order=created_at.desc&limit=1000'),
-        supabaseRequest('sales_documents', 'GET', undefined, '?select=*&order=created_at.desc&limit=1000')
+        supabaseRequest('sales_documents', 'GET', undefined, '?select=*&order=created_at.desc&limit=1000'),
+        supabaseRequest('sales_document_movements', 'GET', undefined, '?select=*&order=movement_date.desc,created_at.desc&limit=5000')
       ]);
       const attachmentsFor = safeText(req.query?.attachmentsFor, 40);
       let attachments = [];
@@ -86,7 +87,7 @@ export default async function handler(req, res) {
         attachments = await Promise.all(rows.map(async (row) => ({ ...row, url: await signedObjectUrl(row.object_path) })));
       }
       res.setHeader('Cache-Control', 'no-store');
-      return sendJson(res, 200, { user: admin, requests, quotes, salesDocuments, attachments });
+      return sendJson(res, 200, { user: admin, requests, quotes, salesDocuments, salesDocumentMovements, attachments });
     } catch {
       return sendJson(res, 503, { error: 'No se pudo consultar la base de datos.' });
     }
@@ -200,6 +201,29 @@ export default async function handler(req, res) {
       return sendJson(res, 200, { ok: true, rows });
     } catch {
       return sendJson(res, 409, { error: 'No se pudo anular. El documento puede estar ya anulado.' });
+    }
+  }
+
+  if (body?.action === 'create-payment-movement') {
+    const saleId=safeText(body.saleId,40);
+    const movementType=safeText(body.movementType,30);
+    const amount=Number(body.amount);
+    const movementDate=safeText(body.movementDate,10);
+    const note=safeText(body.note,500);
+    const allowedTypes=['installment','full_payment','refund','additional_charge'];
+    const parsedDate=new Date(`${movementDate}T00:00:00Z`);
+    if(!/^[0-9a-f-]{36}$/i.test(saleId)||!allowedTypes.includes(movementType)||!Number.isSafeInteger(amount)||amount<=0||amount>10_000_000_000||!/^\d{4}-\d{2}-\d{2}$/.test(movementDate)||Number.isNaN(parsedDate.valueOf())||parsedDate.toISOString().slice(0,10)!==movementDate){
+      return sendJson(res,400,{error:'Revisa el documento, tipo, valor y fecha del movimiento.'});
+    }
+    try{
+      const movement=await supabaseRequest('rpc/admin_add_sales_document_movement','POST',{p_sales_document_id:saleId,p_movement_type:movementType,p_amount:amount,p_movement_date:movementDate,p_note:note,p_created_by:admin.name});
+      return sendJson(res,201,{movement});
+    }catch(error){
+      const message=String(error.message||'');
+      if(message.includes('No se encontró el documento'))return sendJson(res,404,{error:'No se encontró el documento de venta.'});
+      if(message.includes('documento anulado'))return sendJson(res,409,{error:'No se pueden registrar movimientos en un documento anulado.'});
+      if(message.includes('supera')||message.includes('exactamente el saldo')||message.includes('no tiene saldo'))return sendJson(res,400,{error:message.match(/message":"([^"]+)/)?.[1]||'El movimiento no coincide con el saldo actual.'});
+      return sendJson(res,503,{error:'No se pudo registrar el movimiento de pago.'});
     }
   }
 
