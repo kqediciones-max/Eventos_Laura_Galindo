@@ -261,6 +261,7 @@ function addQuoteLine(item = {}, { prepend = true, focus = true } = {}) {
   customNameLabel.append(customName);
   select.addEventListener('change', () => {
     const isCustom = select.value === 'outside-inventory';
+    row.classList.toggle('has-custom-item', isCustom);
     customNameLabel.hidden = !isCustom;
     customName.disabled = !isCustom;
     customName.required = isCustom;
