@@ -525,7 +525,6 @@ quoteBuilder.addEventListener('submit', async (event) => {
   const data = {
     action: pendingSaleQuoteId ? 'create-sale' : editingQuoteId ? 'update-quote' : 'create-quote',
     quoteId: pendingSaleQuoteId || editingQuoteId,
-    quoteId: pendingSaleQuoteId,
     reservedFrom: quoteBuilder.elements.reservedFrom.value,
     reservedUntil: quoteBuilder.elements.reservedUntil.value,
     requestId: quoteBuilder.elements.requestId.value || null,
