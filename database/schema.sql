@@ -125,3 +125,74 @@ $$;
 
 revoke all on function public.admin_create_quote_v3(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, text, numeric, bigint, bigint, text, text, text) from public, anon, authenticated;
 grant execute on function public.admin_create_quote_v3(uuid, text, text, text, text, text, text, date, text, integer, text, jsonb, bigint, numeric, bigint, numeric, bigint, text, numeric, bigint, bigint, text, text, text) to service_role;
+
+-- Documentos internos de venta. Conservan una copia de la cotización confirmada.
+create table if not exists public.sales_documents (
+  id uuid primary key default gen_random_uuid(),
+  quote_id uuid not null unique references public.quotes(id) on delete restrict,
+  sale_number text not null unique,
+  recipient_name text not null,
+  phone text not null default '', customer_document text not null default '', email text not null default '',
+  event_name text not null default '', event_date date not null, city text not null default '',
+  reserved_from date not null, reserved_until date not null,
+  comments text not null default '', items jsonb not null check (jsonb_typeof(items) = 'array'),
+  subtotal bigint not null check (subtotal >= 0), discount_percent numeric(5,2) not null default 0,
+  discount_amount bigint not null default 0, iva_percent numeric(5,2) not null default 0, iva_amount bigint not null default 0,
+  tax_type text not null default '', tax_percent numeric(5,2) not null default 0, tax_amount bigint not null default 0,
+  total bigint not null check (total >= 0), payment_method text not null default '', deposit text not null default '',
+  status text not null default 'active' check (status in ('active','annulled')),
+  created_by text not null, created_at timestamptz not null default now(),
+  annulled_at timestamptz, annulled_by text, annulment_reason text not null default '',
+  check (reserved_until >= reserved_from)
+);
+
+create table if not exists public.sales_document_attachments (
+  id uuid primary key default gen_random_uuid(),
+  sales_document_id uuid not null references public.sales_documents(id) on delete restrict,
+  object_path text not null unique, file_name text not null, content_type text not null,
+  created_by text not null, created_at timestamptz not null default now()
+);
+
+alter table public.sales_documents enable row level security;
+alter table public.sales_document_attachments enable row level security;
+revoke all on public.sales_documents, public.sales_document_attachments from anon, authenticated;
+grant all on public.sales_documents, public.sales_document_attachments to service_role;
+
+create or replace function public.protect_sales_document() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if tg_op = 'DELETE' then raise exception 'Los documentos de venta no se eliminan.'; end if;
+  if old.status = 'annulled' then raise exception 'El documento anulado es inmutable.'; end if;
+  if new.status <> 'annulled'
+     or (to_jsonb(new) - array['status','annulled_at','annulled_by','annulment_reason'])
+        <> (to_jsonb(old) - array['status','annulled_at','annulled_by','annulment_reason'])
+     or new.annulled_at is null or new.annulled_by is null or length(trim(new.annulment_reason)) = 0 then
+    raise exception 'Solo se permite anular un documento con motivo.';
+  end if;
+  return new;
+end;
+$$;
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'sales_documents_immutable' and tgrelid = 'public.sales_documents'::regclass) then
+    create trigger sales_documents_immutable before update or delete on public.sales_documents for each row execute function public.protect_sales_document();
+  end if;
+end $$;
+
+create or replace function public.protect_linked_quote_delete() returns trigger
+language plpgsql set search_path = public as $$
+begin
+  if exists (select 1 from public.sales_documents where quote_id = old.id) then
+    raise exception 'La cotización tiene un documento de venta asociado y no se puede eliminar.';
+  end if;
+  return old;
+end;
+$$;
+do $$ begin
+  if not exists (select 1 from pg_trigger where tgname = 'quotes_sales_document_delete_guard' and tgrelid = 'public.quotes'::regclass) then
+    create trigger quotes_sales_document_delete_guard before delete on public.quotes for each row execute function public.protect_linked_quote_delete();
+  end if;
+end $$;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('sales-doc-attachments', 'sales-doc-attachments', false, 5242880, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do nothing;

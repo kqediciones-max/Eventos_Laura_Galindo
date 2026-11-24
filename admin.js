@@ -7,8 +7,12 @@ const quoteLines = $('#quoteLines');
 const money = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 });
 let requestRows = [];
 let quoteRows = [];
+let salesRows = [];
 let activeUser = null;
 let lastSavedQuote = null;
+let pendingSaleQuoteId = null;
+let activeSaleDocument = null;
+let activeAttachments = [];
 
 function feedback(target, message, isError = false) {
   target.textContent = message;
@@ -36,6 +40,7 @@ async function checkSession() {
     showAdmin(data.user);
     requestRows = data.requests || [];
     quoteRows = data.quotes || [];
+    salesRows = data.salesDocuments || [];
     renderLists();
   } catch (error) {
     if (error.message && !error.message.includes('401') && !error.message.includes('404')) {
@@ -81,6 +86,7 @@ async function loadData() {
     const data = await api('/api/admin');
     requestRows = data.requests || [];
     quoteRows = data.quotes || [];
+    salesRows = data.salesDocuments || [];
     renderLists();
     feedback($('#pageFeedback'), 'Información actualizada.');
   } catch (error) {
@@ -162,9 +168,11 @@ function renderQuotes() {
     empty.className = 'empty-note';
     empty.textContent = 'Aún no hay cotizaciones guardadas.';
     list.append(empty);
-    return;
+    renderSales(); renderDashboards(); return;
   }
-  for (const quote of quoteRows) {
+  const search = ($('#quoteSearch')?.value || '').toLowerCase().trim();
+  const visibleQuotes = quoteRows.filter((q) => [q.quote_number,q.event_name,q.recipient_name,q.phone,q.event_date].join(' ').toLowerCase().includes(search));
+  for (const quote of visibleQuotes) {
     const card = document.createElement('article');
     card.className = 'quote-card';
     const copy = document.createElement('div');
@@ -175,6 +183,11 @@ function renderQuotes() {
     copy.append(title, details);
     const actions = document.createElement('div');
     actions.className = 'quote-card-actions';
+    const sale = salesRows.find((row) => row.quote_id === quote.id);
+    if (sale) {
+      const saleButton = document.createElement('button'); saleButton.type = 'button'; saleButton.className = 'admin-button admin-button-primary'; saleButton.textContent = `Ver ${sale.sale_number}`; saleButton.addEventListener('click', () => openSalesDocument(sale)); actions.append(saleButton);
+    }
+    const copyButton = document.createElement('button'); copyButton.type = 'button'; copyButton.className = 'admin-button admin-button-outline'; copyButton.textContent = 'Copiar'; copyButton.addEventListener('click', () => copyQuote(quote)); actions.append(copyButton);
     const viewButton = document.createElement('button');
     viewButton.type = 'button';
     viewButton.className = 'admin-button admin-button-outline';
@@ -186,10 +199,79 @@ function renderQuotes() {
     deleteButton.textContent = 'Eliminar';
     deleteButton.setAttribute('aria-label', `Eliminar cotización ${quote.quote_number}`);
     deleteButton.addEventListener('click', () => deleteQuote(quote));
-    actions.append(viewButton, deleteButton);
+    if (!sale) actions.append(viewButton, deleteButton);
     card.append(copy, actions);
     list.append(card);
   }
+  renderSales();
+  renderDashboards();
+}
+
+function renderSales() {
+  const list = $('#salesList'); list.replaceChildren();
+  const search = ($('#saleSearch')?.value || '').toLowerCase().trim();
+  const rows = salesRows.filter((s) => [s.sale_number,s.event_name,s.recipient_name,s.phone,s.event_date].join(' ').toLowerCase().includes(search));
+  if (!rows.length) { const p = document.createElement('p'); p.className='empty-note'; p.textContent='No hay documentos que coincidan.'; list.append(p); return; }
+  for (const sale of rows) {
+    const card = document.createElement('article'); card.className='quote-card';
+    const info=document.createElement('div'); const title=document.createElement('h3'); title.textContent=`${sale.recipient_name} · ${sale.event_name || 'Evento'}`;
+    const meta=document.createElement('p'); meta.textContent=`${sale.sale_number} · ${formatDate(sale.event_date)} · ${money.format(Number(sale.total)||0)} · ${sale.status==='annulled'?'ANULADO':'Vigente'}`; info.append(title,meta);
+    const actions=document.createElement('div'); actions.className='quote-card-actions'; const open=document.createElement('button'); open.type='button'; open.className='admin-button admin-button-primary'; open.textContent='Abrir documento'; open.addEventListener('click',()=>openSalesDocument(sale)); actions.append(open); card.append(info,actions); list.append(card);
+  }
+}
+
+function copyQuote(quote) {
+  pendingSaleQuoteId = null; resetQuoteBuilder();
+  for (const key of ['recipientName','customerDocument','phone','email','eventName','eventDate','city','validityDays','comments','discountPercent','paymentMethod','deposit']) {
+    const map={recipientName:'recipient_name',customerDocument:'customer_document',phone:'phone',email:'email',eventName:'event_name',eventDate:'event_date',city:'city',validityDays:'validity_days',comments:'comments',discountPercent:'discount_percent',paymentMethod:'payment_method',deposit:'deposit'};
+    quoteBuilder.elements[key].value = quote[map[key]] ?? '';
+  }
+  if (quote.tax_type) { quoteBuilder.elements.includeTaxes.checked=true; $('#taxTypeField').hidden=false; quoteBuilder.elements.taxType.disabled=false; quoteBuilder.elements.taxType.value=quote.tax_type; }
+  quoteLines.replaceChildren(); (quote.items||[]).forEach((item)=>addQuoteLine(item,{prepend:false,focus:false})); if (!quote.items?.length) addQuoteLine({},{prepend:false,focus:false});
+  $('#quoteTitle').textContent=`Copiar ${quote.quote_number}`; $('#quoteBuilder').scrollIntoView({behavior:'smooth',block:'start'}); updateTotal();
+}
+
+function renderDashboards() {
+  const chosen = (id) => $('#'+id).value || new Date().toISOString().slice(0,10);
+  const range = (type,date) => { const d=new Date(`${date}T12:00:00`); let start=new Date(d),end=new Date(d); if(type==='month'){start.setDate(1);end=new Date(d.getFullYear(),d.getMonth()+1,0,12)} else if(type==='week'){const day=(d.getDay()+6)%7;start.setDate(d.getDate()-day);end=new Date(start);end.setDate(start.getDate()+6)} return [start.toISOString().slice(0,10),end.toISOString().slice(0,10)]; };
+  const eventType=$('[data-period-for="events"]').value, [es,ee]=range(eventType,chosen('eventsDate'));
+  const events=$('#eventsList'); events.replaceChildren(); const dated=salesRows.filter(s=>s.status==='active'&&s.event_date>=es&&s.event_date<=ee);
+  if(!dated.length){events.innerHTML='<p class="empty-note">No hay eventos vendidos en este periodo.</p>';} else dated.sort((a,b)=>a.event_date.localeCompare(b.event_date)).forEach(s=>{const card=document.createElement('article');card.className='dashboard-card';const h=document.createElement('h3');h.textContent=s.event_name||'Evento';const p=document.createElement('p');p.textContent=`${formatDate(s.event_date)} · ${s.recipient_name} · ${s.phone||'Sin teléfono'} · ${s.sale_number}`;const b=document.createElement('button');b.type='button';b.className='admin-button admin-button-outline';b.textContent='Abrir documento';b.addEventListener('click',()=>openSalesDocument(s));card.append(h,p,b);events.append(card)});
+  const occType=$('[data-period-for="occupancy"]').value,[os,oe]=range(occType,chosen('occupancyDate'));
+  const relevant=salesRows.filter(s=>s.status==='active'&&s.reserved_from<=oe&&s.reserved_until>=os);
+  const groups=new Map(); for(const s of relevant) for(const item of s.items||[]) if(item.inventoryItem){const key=item.id;const g=groups.get(key)||{name:item.name,quantity:0,docs:[]};g.quantity+=Number(item.quantity)||0;g.docs.push({sale:s,item});groups.set(key,g)}
+  const list=$('#occupancyList');list.replaceChildren();if(!groups.size){list.innerHTML='<p class="empty-note">No hay mobiliario ocupado en este periodo.</p>';return;}
+  for(const group of groups.values()){const card=document.createElement('article');card.className='dashboard-card';const h=document.createElement('h3');h.textContent=`${group.name} · ${group.quantity} unidades`;const p=document.createElement('p');p.textContent=`Reservado entre ${formatDate(os)} y ${formatDate(oe)}`;card.append(h,p);for(const {sale,item} of group.docs){const b=document.createElement('button');b.type='button';b.className='occupancy-link';b.textContent=`${item.quantity} × ${sale.sale_number} · ${sale.event_name||'Evento'} · ${sale.recipient_name} (${formatDate(sale.reserved_from)}–${formatDate(sale.reserved_until)})`;b.addEventListener('click',()=>openSalesDocument(sale));card.append(b)}list.append(card)}
+}
+
+async function openSalesDocument(sale) {
+  activeSaleDocument=sale; lastSavedQuote=sale; activeAttachments=[];
+  renderPrintDocument(sale,true);
+  $('#previewToolbarTitle').textContent=`Documento de venta · ${sale.sale_number}`;
+  $('#annulSaleButton').hidden=sale.status==='annulled';
+  $('#attachmentManager').hidden=false;
+  try { const result=await api(`/api/admin?attachmentsFor=${encodeURIComponent(sale.id)}`); activeAttachments=result.attachments||[]; renderAttachments(); }
+  catch { activeAttachments=[]; renderAttachments(); }
+  $('#quotePreviewDialog').showModal();
+}
+
+function renderAttachments(){
+  const list=$('#attachmentList'),print=$('#attachmentPrintGrid');list.replaceChildren();print.replaceChildren();
+  $('#printAttachments').hidden=!activeAttachments.length;
+  for(const item of activeAttachments){const wrap=document.createElement('figure');wrap.className='attachment-thumb';const img=document.createElement('img');img.src=item.url;img.alt=item.file_name;const caption=document.createElement('figcaption');caption.textContent=item.file_name;const del=document.createElement('button');del.type='button';del.className='admin-button admin-button-quiet';del.textContent='Eliminar imagen';del.addEventListener('click',async()=>{if(!confirm('¿Eliminar este anexo?'))return;try{await api('/api/admin',{method:'POST',body:JSON.stringify({action:'delete-attachment',attachmentId:item.id})});activeAttachments=activeAttachments.filter(a=>a.id!==item.id);renderAttachments()}catch(e){feedback($('#pageFeedback'),e.message,true)}});wrap.append(img,caption,del);list.append(wrap);const pimg=document.createElement('img');pimg.src=item.url;pimg.alt=item.file_name;pimg.className='print-attachment-image';print.append(pimg)}
+}
+
+async function uploadAttachmentFiles(files){for(const file of files){if(!['image/jpeg','image/png','image/webp'].includes(file.type)){feedback($('#pageFeedback'),`${file.name}: formato no permitido.`,true);continue;}try{const blob=await compressAttachment(file);const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result).split(',')[1]);r.onerror=reject;r.readAsDataURL(blob)});const result=await api('/api/admin',{method:'POST',body:JSON.stringify({action:'upload-attachment',saleId:activeSaleDocument.id,fileName:file.name,contentType:blob.type,data})});activeAttachments.push(result.attachment)}catch(e){feedback($('#pageFeedback'),`${file.name}: ${e.message}`,true)}}renderAttachments()}
+async function compressAttachment(file){const bitmap=await createImageBitmap(file);let scale=Math.min(1,1800/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');let blob;do{canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);canvas.getContext('2d').drawImage(bitmap,0,0,canvas.width,canvas.height);blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.78));scale*=0.85}while(blob&&blob.size>3*1024*1024&&scale>0.35);bitmap.close();if(!blob||blob.size>3*1024*1024)throw new Error('No se pudo reducir a menos de 3 MB.');return blob}
+
+function startSaleFromQuote(quote){
+  pendingSaleQuoteId=quote.id;resetQuoteBuilder();pendingSaleQuoteId=quote.id;
+  for(const [field,key] of [['recipientName','recipient_name'],['customerDocument','customer_document'],['phone','phone'],['email','email'],['eventName','event_name'],['eventDate','event_date'],['city','city'],['validityDays','validity_days'],['comments','comments'],['discountPercent','discount_percent'],['paymentMethod','payment_method'],['deposit','deposit']]) quoteBuilder.elements[field].value=quote[key]??'';
+  if(quote.tax_type){quoteBuilder.elements.includeTaxes.checked=true;$('#taxTypeField').hidden=false;quoteBuilder.elements.taxType.disabled=false;quoteBuilder.elements.taxType.value=quote.tax_type;}
+  quoteLines.replaceChildren();(quote.items||[]).forEach(item=>addQuoteLine(item,{prepend:false,focus:false}));
+  const eventDate=quote.event_date||new Date().toISOString().slice(0,10);quoteBuilder.elements.reservedFrom.value=eventDate;quoteBuilder.elements.reservedUntil.value=eventDate;
+  $('#saleFields').hidden=false;quoteBuilder.elements.reservedFrom.required=true;quoteBuilder.elements.reservedUntil.required=true;
+  $('#saveQuoteButton').textContent='Confirmar y generar documento de venta';$('#cancelSaleDraftButton').hidden=false;$('#quoteTitle').textContent=`Generar venta desde ${quote.quote_number}`;$('#quoteBuilder').scrollIntoView({behavior:'smooth',block:'start'});updateTotal();
 }
 
 function renderLists() {
@@ -269,6 +351,7 @@ function addQuoteLine(item = {}, { prepend = true, focus = true } = {}) {
     else customName.value = '';
     updateTotal();
   });
+  if (item.id === 'outside-inventory') { select.value='outside-inventory'; row.classList.add('has-custom-item'); customNameLabel.hidden=false; customName.disabled=false; customName.required=true; customName.value=item.name||''; }
 
   const quantityLabel = document.createElement('label');
   quantityLabel.className = 'quantity-label';
@@ -363,6 +446,8 @@ function resetQuoteBuilder() {
   lastSavedQuote = null;
   $('#quoteActions').hidden = true;
   $('#quoteTitle').textContent = 'Preparar cotización';
+  $('#saleFields').hidden=true;quoteBuilder.elements.reservedFrom.required=false;quoteBuilder.elements.reservedUntil.required=false;
+  $('#saveQuoteButton').textContent='Guardar cotización';$('#cancelSaleDraftButton').hidden=true;pendingSaleQuoteId=null;
   feedback($('#quoteFeedback'), '');
 }
 
@@ -396,7 +481,8 @@ quoteBuilder.addEventListener('submit', async (event) => {
         category: 'Producto fuera del inventario',
         quantity: Number($('[data-field="quantity"]', line).value),
         unitPrice: Number($('[data-field="price"]', line).value),
-        comment: $('[data-field="comment"]', line).value
+        comment: $('[data-field="comment"]', line).value,
+        inventoryItem: false
       } : null;
     }
     const item = selectedCatalogItem(select);
@@ -406,7 +492,8 @@ quoteBuilder.addEventListener('submit', async (event) => {
       category: item.category,
       quantity: Number($('[data-field="quantity"]', line).value),
       unitPrice: Number($('[data-field="price"]', line).value),
-      comment: $('[data-field="comment"]', line).value
+      comment: $('[data-field="comment"]', line).value,
+      inventoryItem: products.some((product) => product.id === item.id)
     } : null;
   }).filter(Boolean);
   if (items.length !== quoteLines.querySelectorAll('.quote-line').length || !items.length) {
@@ -418,7 +505,10 @@ quoteBuilder.addEventListener('submit', async (event) => {
     return;
   }
   const data = {
-    action: 'create-quote',
+    action: pendingSaleQuoteId ? 'create-sale' : 'create-quote',
+    quoteId: pendingSaleQuoteId,
+    reservedFrom: quoteBuilder.elements.reservedFrom.value,
+    reservedUntil: quoteBuilder.elements.reservedUntil.value,
     requestId: quoteBuilder.elements.requestId.value || null,
     recipientName: quoteBuilder.elements.recipientName.value,
     phone: quoteBuilder.elements.phone.value,
@@ -437,16 +527,18 @@ quoteBuilder.addEventListener('submit', async (event) => {
   };
   const button = $('#saveQuoteButton');
   button.disabled = true;
-  feedback($('#quoteFeedback'), 'Guardando la cotización…');
+  feedback($('#quoteFeedback'), pendingSaleQuoteId ? 'Generando el documento de venta…' : 'Guardando la cotización…');
   try {
     const result = await api('/api/admin', { method: 'POST', body: JSON.stringify(data) });
-    const saved = result.quote;
+    const saved = result.quote || result.salesDocument;
     lastSavedQuote = saved;
     $('#quoteActions').hidden = false;
     $('#sendWhatsAppButton').hidden = !saved.phone;
     renderPrintDocument(saved);
-    feedback($('#quoteFeedback'), `Cotización ${saved.quote_number} guardada.`);
+    if (result.salesDocument) { pendingSaleQuoteId=null; $('#saleFields').hidden=true; quoteBuilder.elements.reservedFrom.required=false; quoteBuilder.elements.reservedUntil.required=false; $('#saveQuoteButton').textContent='Guardar cotización'; $('#cancelSaleDraftButton').hidden=true; feedback($('#quoteFeedback'), `Documento de venta ${saved.sale_number} generado.`); }
+    else feedback($('#quoteFeedback'), `Cotización ${saved.quote_number} guardada.`);
     await loadData();
+    if (result.salesDocument) await openSalesDocument(saved);
   } catch (error) {
     feedback($('#quoteFeedback'), error.message, true);
   } finally {
@@ -454,8 +546,14 @@ quoteBuilder.addEventListener('submit', async (event) => {
   }
 });
 
-function renderPrintDocument(quote) {
-  $('#printQuoteNumber').textContent = quote.quote_number;
+function renderPrintDocument(quote, isSale = false) {
+  const number = isSale ? quote.sale_number : quote.quote_number;
+  $('#printQuoteNumber').textContent = number || '';
+  document.querySelector('.print-info-grid .print-info-box:nth-child(2) dt').textContent = isSale ? 'N.º documento:' : 'N.º cotización:';
+  $('.print-title h2').textContent = isSale ? 'DOCUMENTO DE VENTA' : 'COTIZACIÓN';
+  $('#printAnnulled').hidden = !isSale || quote.status !== 'annulled';
+  $('#printAnnulmentReason').textContent = quote.annulment_reason || '';
+  $('#previewToolbarTitle').textContent = isSale ? `Documento de venta · ${number}` : 'Vista previa · Cotización formal';
   $('#printCreatedAt').textContent = `Fecha de emisión: ${formatDate(quote.created_at || new Date().toISOString())}`;
   $('#printRecipient').textContent = quote.recipient_name || '';
   $('#printCustomerDocument').textContent = quote.customer_document || '—';
@@ -463,12 +561,15 @@ function renderPrintDocument(quote) {
   $('#printEmail').textContent = quote.email || '—';
   $('#printEventName').textContent = quote.event_name || '—';
   $('#printEventDate').textContent = formatDate(quote.event_date);
+  $('#printAvailabilityNote').textContent=isSale?'Documento interno de control de venta. La reserva del mobiliario corresponde al periodo indicado y queda sujeta a la confirmación del anticipo o abono acordado.':'Durante la vigencia indicada se respetan los valores cotizados. La disponibilidad de los productos no queda reservada por esta cotización y se confirma al formalizar la reserva con el anticipo o abono acordado.';
+  $('#printReservedFromLabel').hidden=!isSale;$('#printReservedFrom').hidden=!isSale;$('#printReservedUntilLabel').hidden=!isSale;$('#printReservedUntil').hidden=!isSale;
+  $('#printReservedFrom').textContent=formatDate(quote.reserved_from);$('#printReservedUntil').textContent=formatDate(quote.reserved_until);
   $('#printCity').textContent = quote.city || 'Por confirmar';
   const validityDays = Number(quote.validity_days) || 30;
-  $('#printValidity').textContent = `${validityDays} días`;
+  $('#printValidity').textContent = isSale ? 'No aplica' : `${validityDays} días`;
   const issued = new Date(`${(quote.created_at || new Date().toISOString()).slice(0, 10)}T12:00:00`);
   issued.setDate(issued.getDate() + validityDays);
-  $('#printValidUntil').textContent = formatDate(issued.toISOString().slice(0, 10));
+  $('#printValidUntil').textContent = isSale ? 'No aplica' : formatDate(issued.toISOString().slice(0, 10));
   const computedSubtotal = (quote.items || []).reduce((sum, item) => sum + (Number(item.quantity) || 0) * (Number(item.unitPrice) || 0), 0);
   const subtotal = Number(quote.subtotal) || computedSubtotal;
   $('#printSubtotal').textContent = money.format(subtotal);
@@ -510,6 +611,9 @@ function renderPrintDocument(quote) {
 
 function printQuote(quote) {
   lastSavedQuote = quote;
+  activeSaleDocument=null;
+  $('#attachmentManager').hidden=true;$('#annulSaleButton').hidden=true;$('#previewToolbarTitle').textContent='Vista previa · Cotización formal';
+  $('#printAttachments').hidden=true;
   renderPrintDocument(quote);
   $('#quotePreviewDialog').showModal();
 }
@@ -518,6 +622,12 @@ $('#viewQuoteButton').addEventListener('click', () => { if (lastSavedQuote) prin
 $('#closeQuotePreview').addEventListener('click', () => $('#quotePreviewDialog').close());
 $('#quotePreviewDialog').addEventListener('click', (event) => { if (event.target === $('#quotePreviewDialog')) $('#quotePreviewDialog').close(); });
 $('#downloadPdfButton').addEventListener('click', () => { if (lastSavedQuote) window.print(); });
+$('#cancelSaleDraftButton').addEventListener('click', resetQuoteBuilder);
+$('#quoteSearch').addEventListener('input',renderQuotes);$('#saleSearch').addEventListener('input',renderSales);
+document.querySelectorAll('[data-period-for],#eventsDate,#occupancyDate').forEach(el=>el.addEventListener('change',renderDashboards));
+document.querySelectorAll('[data-admin-tab]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-admin-tab]').forEach(x=>x.classList.toggle('is-active',x===button));$('#managementDashboard').hidden=button.dataset.adminTab!=='management';$('#eventsDashboard').hidden=button.dataset.adminTab!=='events';$('#occupancyDashboard').hidden=button.dataset.adminTab!=='occupancy';if(button.dataset.adminTab==='events'||button.dataset.adminTab==='occupancy')renderDashboards()}));
+$('#attachmentInput').addEventListener('change',async(event)=>{if(activeSaleDocument&&event.target.files?.length)await uploadAttachmentFiles([...event.target.files]);event.target.value=''});
+$('#annulSaleButton').addEventListener('click',async()=>{if(!activeSaleDocument||activeSaleDocument.status==='annulled')return;const reason=window.prompt('Indica el motivo de anulación del documento:');if(!reason||reason.trim().length<3)return;try{await api('/api/admin',{method:'POST',body:JSON.stringify({action:'annul-sale',saleId:activeSaleDocument.id,reason:reason.trim()})});await loadData();const updated=salesRows.find(s=>s.id===activeSaleDocument.id);if(updated)await openSalesDocument(updated)}catch(e){feedback($('#pageFeedback'),e.message,true)}});
 $('#sendWhatsAppButton').addEventListener('click', () => {
   if (!lastSavedQuote?.phone) return;
   const text = `Hola ${lastSavedQuote.recipient_name}, te compartimos la cotización ${lastSavedQuote.quote_number}. Descarga el PDF desde el panel y adjúntalo a este chat.`;
@@ -526,4 +636,5 @@ $('#sendWhatsAppButton').addEventListener('click', () => {
 });
 
 addQuoteLine();
+const today = new Date().toISOString().slice(0,10); $('#eventsDate').value=today; $('#occupancyDate').value=today;
 checkSession();

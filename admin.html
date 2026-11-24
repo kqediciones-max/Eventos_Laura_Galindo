@@ -35,18 +35,27 @@
     <section id="adminApp" hidden>
       <div class="admin-welcome"><div><span class="admin-eyebrow">CENTRO DE ATENCIÓN</span><h1>Hola, <span id="adminName"></span></h1><p>Solicitudes de clientes y cotizaciones en un solo lugar.</p></div><button class="admin-button admin-button-primary" id="newQuoteButton" type="button">Nueva cotización</button></div>
       <div class="admin-stats" aria-label="Resumen"><article><span>Solicitudes pendientes</span><strong id="pendingCount">0</strong></article><article><span>Cotizaciones guardadas</span><strong id="quoteCount">0</strong></article><article><span>Con respuesta enviada</span><strong id="answeredCount">0</strong></article></div>
+      <nav class="admin-tabs" aria-label="Secciones administrativas"><button type="button" data-admin-tab="management" class="is-active">Gestión</button><button type="button" data-admin-tab="events">Eventos vendidos</button><button type="button" data-admin-tab="occupancy">Ocupación de mobiliario</button></nav>
+      <section class="admin-dashboard" id="eventsDashboard" hidden><div class="panel-heading"><div><span class="admin-eyebrow">AGENDA CONFIRMADA</span><h2>Eventos con documento de venta</h2></div><div class="dashboard-filters"><select data-period-for="events" aria-label="Filtrar eventos por"><option value="month">Mes</option><option value="week">Semana</option><option value="day">Día</option></select><input type="date" id="eventsDate" aria-label="Fecha para filtrar eventos"></div></div><div id="eventsList" class="dashboard-list"></div></section>
+      <section class="admin-dashboard" id="occupancyDashboard" hidden><div class="panel-heading"><div><span class="admin-eyebrow">BODEGA</span><h2>Ocupación de mobiliario</h2></div><div class="dashboard-filters"><select data-period-for="occupancy" aria-label="Filtrar ocupación por"><option value="month">Mes</option><option value="week">Semana</option><option value="day">Día</option></select><input type="date" id="occupancyDate" aria-label="Fecha para filtrar ocupación"></div></div><div id="occupancyList" class="dashboard-list"></div></section>
+      <div id="managementDashboard">
       <div class="admin-workspace">
         <section class="admin-panel requests-panel" aria-labelledby="requestsTitle">
           <div class="panel-heading"><div><span class="admin-eyebrow">BANDEJA DE ENTRADA</span><h2 id="requestsTitle">Solicitudes</h2></div><button class="icon-reload" id="refreshButton" type="button" aria-label="Actualizar solicitudes">↻</button></div>
           <div class="request-list" id="requestList"><p class="empty-note">Cargando solicitudes…</p></div>
           <div class="panel-heading saved-heading"><div><span class="admin-eyebrow">HISTORIAL</span><h2>Cotizaciones</h2></div></div>
+          <label class="search-label">Buscar por evento, cliente, teléfono o fecha<input type="search" id="quoteSearch" placeholder="Ej. Boda, María, 300…"></label>
           <div class="quote-list" id="quoteList"><p class="empty-note">Aún no hay cotizaciones.</p></div>
+          <div class="panel-heading saved-heading"><div><span class="admin-eyebrow">VENTAS</span><h2>Documentos de venta</h2></div></div>
+          <label class="search-label">Buscar por evento, cliente, teléfono o fecha<input type="search" id="saleSearch" placeholder="Ej. Quince años, 2026-12…"></label>
+          <div class="quote-list" id="salesList"><p class="empty-note">Aún no hay documentos de venta.</p></div>
         </section>
 
         <section class="admin-panel quote-panel" aria-labelledby="quoteTitle">
           <div class="panel-heading"><div><span class="admin-eyebrow">PROPUESTA COMERCIAL</span><h2 id="quoteTitle">Preparar cotización</h2></div></div>
           <form id="quoteBuilder" class="admin-form">
             <input type="hidden" name="requestId">
+            <div class="form-grid sale-fields" id="saleFields" hidden><label>Fecha desde la que se reserva el mobiliario<input name="reservedFrom" type="date"></label><label>Fecha de devolución del mobiliario<input name="reservedUntil" type="date"></label></div>
             <div class="form-grid"><label>Nombre del cliente<input name="recipientName" required autocomplete="name" placeholder="Nombre completo"></label><label>Cédula o NIT del cliente<input name="customerDocument" placeholder="Opcional"></label><label>Teléfono / WhatsApp<input name="phone" type="tel" autocomplete="tel" placeholder="Opcional"></label><label>Correo electrónico<input name="email" type="email" autocomplete="email" placeholder="Opcional"></label><label>Evento<input name="eventName" placeholder="Ej. Boda, quince años"></label><label>Fecha del evento<input name="eventDate" type="date"></label><label>Ciudad<input name="city" placeholder="Ciudad"></label><label>Validez de la cotización (días)<input name="validityDays" type="number" min="1" max="365" value="30"></label></div>
             <div class="line-heading"><div><span class="admin-eyebrow">DETALLE</span><h3>Productos y servicios</h3></div><button class="admin-button admin-button-outline" id="addLineButton" type="button">+ Agregar ítem</button></div>
             <div class="quote-lines" id="quoteLines"></div>
@@ -55,23 +64,26 @@
             <div class="tax-controls"><label class="tax-toggle"><input name="includeTaxes" type="checkbox"> Agregar impuesto a esta cotización</label><label id="taxTypeField" hidden>Selecciona el impuesto<select name="taxType" disabled><option value="">Elige una opción</option><option value="iva_5">IVA tarifa 5%</option><option value="iva_19">IVA tarifa 19%</option><option value="consumo_8">Impuesto al consumo 8%</option></select></label></div>
             <div class="quote-total"><span>Total de la cotización</span><strong id="quoteTotal">$ 0</strong></div>
             <button class="admin-button admin-button-primary" type="submit" id="saveQuoteButton">Guardar cotización</button>
+            <button class="admin-button admin-button-outline" type="button" id="cancelSaleDraftButton" hidden>Cancelar generación de venta</button>
             <p class="admin-feedback" id="quoteFeedback" role="status" aria-live="polite"></p>
           </form>
           <div class="quote-actions" id="quoteActions" hidden><button class="admin-button admin-button-outline" type="button" id="viewQuoteButton">Ver cotización</button><button class="admin-button admin-button-primary" type="button" id="sendWhatsAppButton">Abrir WhatsApp para enviarlo</button><p>Abre la vista formal y descarga el PDF desde allí.</p></div>
         </section>
+      </div>
       </div>
     </section>
     <p class="page-feedback" id="pageFeedback" role="status" aria-live="polite"></p>
   </main>
 
   <dialog class="quote-preview-dialog" id="quotePreviewDialog" aria-label="Vista previa de cotización">
-    <div class="quote-preview-toolbar"><span>Vista previa · Cotización formal</span><div><button class="admin-button admin-button-outline" type="button" id="closeQuotePreview">Cerrar</button><button class="admin-button admin-button-primary" type="button" id="downloadPdfButton">Imprimir / Guardar PDF</button></div></div>
+    <div class="quote-preview-toolbar"><span id="previewToolbarTitle">Vista previa · Cotización formal</span><div><button class="admin-button admin-button-quiet" type="button" id="annulSaleButton" hidden>Anular documento</button><button class="admin-button admin-button-outline" type="button" id="closeQuotePreview">Cerrar</button><button class="admin-button admin-button-primary" type="button" id="downloadPdfButton">Imprimir / Guardar PDF</button></div></div>
     <article class="print-document" id="printDocument" aria-label="Cotización formal">
+      <div class="print-annulled" id="printAnnulled" hidden>DOCUMENTO ANULADO · <span id="printAnnulmentReason"></span></div>
       <header class="print-header"><img src="assets/logo-laura-galindo-visible.png" alt="Logo Laura Galindo"><div class="company-heading"><h1>CASA DE EVENTOS LAURA GALINDO</h1><p>NIT 1.110.513.001-1</p><p>Tel: 313 448 6683 / 322 703 9197</p><p>Calle 68 # 2-70, Arkaniza 1</p></div></header>
       <div class="print-title"><h2>COTIZACIÓN</h2></div>
       <div class="print-info-grid">
         <section class="print-info-box"><h3>DATOS DEL CLIENTE</h3><dl><dt>Señor(a/es):</dt><dd id="printRecipient"></dd><dt>NIT / C.C.:</dt><dd id="printCustomerDocument"></dd><dt>Teléfono:</dt><dd id="printPhone"></dd><dt>Correo:</dt><dd id="printEmail"></dd><dt>Evento:</dt><dd id="printEventName"></dd><dt>Ciudad:</dt><dd id="printCity"></dd></dl></section>
-        <section class="print-info-box"><h3>DATOS DE LA COTIZACIÓN</h3><dl><dt>N.º cotización:</dt><dd id="printQuoteNumber"></dd><dt>Fecha:</dt><dd id="printCreatedAt"></dd><dt>Validez:</dt><dd id="printValidity"></dd><dt>Válida hasta:</dt><dd id="printValidUntil"></dd><dt>Fecha del evento:</dt><dd id="printEventDate"></dd></dl></section>
+        <section class="print-info-box"><h3>DATOS DE LA COTIZACIÓN</h3><dl><dt>N.º cotización:</dt><dd id="printQuoteNumber"></dd><dt>Fecha:</dt><dd id="printCreatedAt"></dd><dt>Validez:</dt><dd id="printValidity"></dd><dt>Válida hasta:</dt><dd id="printValidUntil"></dd><dt>Fecha del evento:</dt><dd id="printEventDate"></dd><dt id="printReservedFromLabel" hidden>Reserva desde:</dt><dd id="printReservedFrom" hidden></dd><dt id="printReservedUntilLabel" hidden>Reserva hasta:</dt><dd id="printReservedUntil" hidden></dd></dl></section>
       </div>
       <table class="print-lines"><thead><tr><th>Ítem</th><th>Descripción del producto / servicio</th><th>Cantidad</th><th>Unidad</th><th>Valor unitario</th><th>Valor total</th></tr></thead><tbody id="printItems"></tbody></table>
       <div class="print-bottom-grid">
@@ -79,10 +91,12 @@
         <section class="print-totals"><dl><dt>Subtotal</dt><dd id="printSubtotal"></dd><dt>Descuento (<span id="printDiscountPercent"></span>%)</dt><dd id="printDiscount"></dd><dt id="printTaxRow" hidden><span id="printTaxLabel"></span></dt><dd id="printTaxAmount" hidden></dd></dl><div class="print-grand-total"><span>TOTAL</span><strong id="printTotal"></strong></div></section>
       </div>
       <section class="print-commercial"><h3>CONDICIONES COMERCIALES</h3><dl><dt>Forma de pago:</dt><dd id="printPaymentMethod"></dd><dt>Anticipo para reserva:</dt><dd id="printDeposit"></dd></dl></section>
-      <p class="print-availability-note">Durante la vigencia indicada se respetan los valores cotizados. La disponibilidad de los productos no queda reservada por esta cotización y se confirma al formalizar la reserva con el anticipo o abono acordado.</p>
+      <p class="print-availability-note" id="printAvailabilityNote">Durante la vigencia indicada se respetan los valores cotizados. La disponibilidad de los productos no queda reservada por esta cotización y se confirma al formalizar la reserva con el anticipo o abono acordado.</p>
       <section class="print-signatures"><div><strong>Laura Galindo</strong><span>Casa de Eventos Laura Galindo</span></div><div><strong>Aceptación del cliente</strong><span id="printSignatureName">Nombre, firma y fecha</span></div></section>
       <footer class="print-footer"><p>¡Gracias por permitirnos ser parte de tu celebración!</p><p class="print-tax-note">Valores sujetos a variación o aplicación de impuestos.</p></footer>
+      <section class="print-attachments" id="printAttachments" hidden><h2>Anexos fotográficos</h2><div id="attachmentPrintGrid"></div></section>
     </article>
+    <section class="attachment-manager" id="attachmentManager" hidden><div><h2>Anexos fotográficos del documento</h2><p>Adjunta fotos de referencia del evento o los productos. Imágenes JPG, PNG o WebP; máximo 5 MB por imagen.</p></div><label class="admin-button admin-button-outline upload-attachment">Agregar imágenes<input type="file" id="attachmentInput" accept="image/jpeg,image/png,image/webp" multiple></label><div id="attachmentList" class="attachment-list"></div></section>
   </dialog>
 
   <script src="config.js"></script>
