@@ -40,6 +40,7 @@
 .print-signatures>div{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:4px;border-top:1px solid #5f5a5c}
 .print-signatures strong{font-size:8pt}.print-signatures span{color:#81777b;font-size:7pt}
 .print-footer{margin-top:14px;padding:6px;background:#f9e3e9;text-align:center;color:#453940}
+.print-bottom-grid.no-comments .print-totals{grid-column:1/-1}
 .print-footer p{margin:0;font:italic 8pt Georgia,serif}
 .quote-terms-grid{margin-top:4px}
 @media(max-width:900px){.admin-workspace{grid-template-columns:1fr}.requests-panel{order:2}.quote-panel{order:1}}

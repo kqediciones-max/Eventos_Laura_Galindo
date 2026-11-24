@@ -609,6 +609,7 @@ function renderPrintDocument(quote, isSale = false) {
   $('#printSignatureName').textContent = quote.recipient_name || 'Nombre, firma y fecha';
   $('#printComments').textContent = quote.comments || '';
   $('#printCommentsSection').hidden = !quote.comments;
+  $('.print-bottom-grid').classList.toggle('no-comments',!quote.comments);
   const tbody = $('#printItems');
   tbody.replaceChildren();
   for (const [index, item] of (quote.items || []).entries()) {
@@ -711,16 +712,19 @@ async function buildDocumentPdf(fileName) {
     article.style.setProperty('display','block','important');
     article.style.setProperty('visibility','visible','important');
     article.style.setProperty('position','static','important');
-    article.style.setProperty('width','194mm','important');
-    article.style.setProperty('max-width','194mm','important');
+    article.style.setProperty('width','200mm','important');
+    article.style.setProperty('max-width','200mm','important');
+    article.style.setProperty('padding','8mm','important');
     article.style.setProperty('min-height','0','important');
     article.style.setProperty('height','auto','important');
     article.style.setProperty('margin','0 auto','important');
     article.style.setProperty('box-shadow','none','important');
     article.style.setProperty('background','#fff','important');
+    article.querySelector('.print-signatures')?.style.setProperty('margin-top','18px','important');
+    article.querySelector('.print-footer')?.style.setProperty('margin-top','10px','important');
   };
   setExportLayout(documentElement);
-  const options={margin:[8,8,10,8],filename:fileName,image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',imageTimeout:12000,onclone:(clonedDocument)=>{const article=clonedDocument.querySelector('#printDocument');if(article)setExportLayout(article)}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['.print-info-box','.print-totals','.print-attachments figure']}};
+  const options={margin:[5,5,7,5],filename:fileName,image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',imageTimeout:12000,onclone:(clonedDocument)=>{const article=clonedDocument.querySelector('#printDocument');if(article)setExportLayout(article)}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy'],avoid:['.print-info-box','.print-totals','.print-commercial','.print-availability-note','.print-signatures','.print-footer','.print-attachments figure']}};
   try {
     const blob=await window.html2pdf().set(options).from(documentElement).outputPdf('blob');
     if(!blob||blob.size<1500)throw new Error('El PDF generado no contiene el documento. Vuelve a abrir la vista previa e inténtalo otra vez.');
