@@ -36,6 +36,21 @@
 .print-grand-total{width:100%;margin:0;padding:5px 8px;background:#83b99b;color:white;display:flex;justify-content:space-between;font-size:10pt;font-weight:bold}
 .print-commercial{margin:12px 0}
 .print-commercial dl{grid-template-columns:31% 69%}
+.print-payment-status{margin:12px 0;border:1px solid #83b99b;break-inside:auto}
+.print-payment-status>h3{margin:0;background:#83b99b;color:#fff;text-align:center;padding:5px;font:bold 8pt Arial,sans-serif}
+.print-payment-summary{display:grid;grid-template-columns:1fr auto;margin:0;background:#e3f0e7}
+.print-payment-summary dt,.print-payment-summary dd{margin:0;padding:4px 8px;border-bottom:1px solid #aad1b8;font:8pt Arial,sans-serif}
+.print-payment-summary dd{text-align:right;font-weight:600}
+.print-payment-summary dt:last-of-type,.print-payment-summary dd:last-of-type{border-bottom:0;font-weight:700;color:#5c2b40}
+.print-payment-history{padding:8px 7px 0}
+.print-payment-history h4{margin:2px 0 7px;color:#5c2b40;font:bold 8pt Arial,sans-serif}
+.print-payment-history>p{margin:0 0 8px;color:#786f72;font:8pt Arial,sans-serif}
+.print-payment-history .print-payment-table{margin:0 0 8px;table-layout:fixed}
+.print-payment-table th:nth-child(1){width:17%}.print-payment-table th:nth-child(2){width:21%}.print-payment-table th:nth-child(3){width:44%}.print-payment-table th:nth-child(4){width:18%}
+.print-payment-table th,.print-payment-table td{font-size:7pt}
+.print-payment-table th:nth-child(2),.print-payment-table th:nth-child(3),.print-payment-table td:nth-child(2),.print-payment-table td:nth-child(3){text-align:left}
+.print-payment-table td:nth-child(3){overflow-wrap:anywhere}
+.print-payment-table th:nth-child(4),.print-payment-table td:nth-child(4){text-align:right;white-space:nowrap}
 .print-signatures{display:grid;grid-template-columns:1fr 1fr;gap:10%;margin-top:42px;text-align:center}
 .print-signatures>div{display:flex;flex-direction:column;align-items:center;gap:3px;padding-top:4px;border-top:1px solid #5f5a5c}
 .print-signatures strong{font-size:8pt}.print-signatures span{color:#81777b;font-size:7pt}
@@ -53,7 +68,7 @@
   #quotePreviewDialog::backdrop{display:none!important}
   #quotePreviewDialog .quote-preview-toolbar{display:none!important}
   #quotePreviewDialog .print-document{display:block!important;width:100%!important;min-height:0!important;margin:0!important;padding:0!important;box-shadow:none!important}
-  #quotePreviewDialog .print-lines tr,.print-info-box,.print-observations,.print-totals,.print-commercial,.print-signatures{break-inside:avoid}
+  #quotePreviewDialog .print-lines tr,.print-info-box,.print-observations,.print-totals,.print-commercial,.print-signatures,.print-payment-summary,.print-payment-table tr{break-inside:avoid}
 }
 
 /* Herramientas del historial y selección de impuestos */

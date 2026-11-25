@@ -107,6 +107,13 @@
         <section class="print-totals"><dl><dt>Subtotal</dt><dd id="printSubtotal"></dd><dt>Descuento (<span id="printDiscountPercent"></span>%)</dt><dd id="printDiscount"></dd><dt id="printTaxRow" hidden><span id="printTaxLabel"></span></dt><dd id="printTaxAmount" hidden></dd></dl><div class="print-grand-total"><span>TOTAL</span><strong id="printTotal"></strong></div></section>
       </div>
       <section class="print-commercial"><h3>CONDICIONES COMERCIALES</h3><dl><dt>Forma de pago:</dt><dd id="printPaymentMethod"></dd><dt>Anticipo para reserva:</dt><dd id="printDeposit"></dd></dl></section>
+      <section class="print-payment-status" id="printPaymentStatus" hidden>
+        <h3>ESTADO DE PAGOS</h3>
+        <dl class="print-payment-summary"><dt>Valor del documento</dt><dd id="printSaleTotal"></dd><dt>Cobros adicionales</dt><dd id="printSaleCharges"></dd><dt>Devoluciones</dt><dd id="printSaleRefunds"></dd><dt>Pagado neto</dt><dd id="printSalePaid"></dd><dt>Saldo pendiente</dt><dd id="printSaleBalance"></dd></dl>
+        <div class="print-payment-history"><h4>Abonos y movimientos registrados</h4><p id="printNoPayments" hidden>Sin abonos ni pagos registrados.</p>
+          <table class="print-lines print-payment-table" id="printPaymentTable"><thead><tr><th>Fecha</th><th>Movimiento</th><th>Detalle / responsable</th><th>Valor</th></tr></thead><tbody id="printPaymentRows"></tbody></table>
+        </div>
+      </section>
       <p class="print-availability-note" id="printAvailabilityNote">Durante la vigencia indicada se respetan los valores cotizados. La disponibilidad de los productos no queda reservada por esta cotización y se confirma al formalizar la reserva con el anticipo o abono acordado.</p>
       <section class="print-signatures"><div><strong>Laura Galindo</strong><span>Casa de Eventos Laura Galindo</span></div><div><strong>Aceptación del cliente</strong><span id="printSignatureName">Nombre, firma y fecha</span></div></section>
       <footer class="print-footer"><p>¡Gracias por permitirnos ser parte de tu celebración!</p><p class="print-tax-note">Valores sujetos a variación o aplicación de impuestos.</p></footer>

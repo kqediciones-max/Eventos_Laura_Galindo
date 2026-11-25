@@ -661,6 +661,29 @@ function renderPrintDocument(quote, isSale = false) {
   $('#printTotal').textContent = money.format(Number(quote.total) || 0);
   $('#printPaymentMethod').textContent = quote.payment_method || 'Por acordar';
   $('#printDeposit').textContent = quote.deposit || 'Por acordar';
+  const paymentSection=$('#printPaymentStatus');
+  paymentSection.hidden=!isSale;
+  const paymentRows=$('#printPaymentRows');
+  paymentRows.replaceChildren();
+  if(isSale){
+    const totals=paymentTotals(quote);
+    $('#printSaleTotal').textContent=money.format(Number(quote.total)||0);
+    $('#printSaleCharges').textContent=money.format(totals.charges);
+    $('#printSaleRefunds').textContent=money.format(totals.refunded);
+    $('#printSalePaid').textContent=money.format(totals.netReceived);
+    $('#printSaleBalance').textContent=money.format(Math.max(0,totals.balance));
+    const movements=[...totals.rows].sort((a,b)=>a.movement_date.localeCompare(b.movement_date)||(a.created_at||'').localeCompare(b.created_at||''));
+    $('#printNoPayments').hidden=movements.length>0;
+    $('#printPaymentTable').hidden=!movements.length;
+    for(const movement of movements){
+      const row=document.createElement('tr');
+      const date=document.createElement('td');date.textContent=formatDate(movement.movement_date);
+      const type=document.createElement('td');type.textContent=movementNames[movement.movement_type]||movement.movement_type;
+      const detail=document.createElement('td');detail.textContent=[movement.note,movement.created_by].filter(Boolean).join(' · ')||'—';
+      const amount=document.createElement('td');amount.textContent=money.format(Number(movement.amount)||0);
+      row.append(date,type,detail,amount);paymentRows.append(row);
+    }
+  }
   $('#printSignatureName').textContent = quote.recipient_name || 'Nombre, firma y fecha';
   $('#printComments').textContent = quote.comments || '';
   $('#printCommentsSection').hidden = !quote.comments;
@@ -796,7 +819,7 @@ async function buildDocumentPdf(fileName) {
   setExportLayout(exportDocument);
   exportStage.append(exportDocument);
   document.body.append(exportStage);
-  const options={margin:[5,5,7,5],filename:fileName,image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',imageTimeout:12000,onclone:(clonedDocument)=>{const article=clonedDocument.querySelector('#printDocument');if(article)setExportLayout(article)}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css'],avoid:['.print-info-box','.print-totals','.print-commercial','.print-availability-note','.print-signatures','.print-footer','.print-attachments figure']}};
+  const options={margin:[5,5,7,5],filename:fileName,image:{type:'jpeg',quality:0.96},html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',imageTimeout:12000,onclone:(clonedDocument)=>{const article=clonedDocument.querySelector('#printDocument');if(article)setExportLayout(article)}},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css'],avoid:['.print-info-box','.print-totals','.print-commercial','.print-payment-summary','.print-payment-table tr','.print-availability-note','.print-signatures','.print-footer','.print-attachments figure']}};
   try {
     const blob=await window.html2pdf().set(options).from(exportDocument).outputPdf('blob');
     if(!blob||blob.size<1500)throw new Error('El PDF generado no contiene el documento. Vuelve a abrir la vista previa e inténtalo otra vez.');
