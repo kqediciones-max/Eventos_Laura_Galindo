@@ -103,6 +103,29 @@ footer .instagram-link{display:inline-flex;align-items:center;gap:8px;color:var(
 .cart-item-copy h3{overflow-wrap:anywhere}
 .cart-empty{margin:34px auto}
 .quote-form{flex:0 0 auto;padding:17px 0 8px}
+
+/* Galería del portafolio */
+.portfolio-section{padding:82px max(7.3vw,28px) 86px;background:#f8f6f2;scroll-margin-top:100px}
+.portfolio-heading{display:flex;align-items:end;justify-content:space-between;gap:38px;margin:0 1.2vw 40px}
+.portfolio-heading h2{font:500 clamp(34px,3.6vw,46px)/1.15 var(--serif);letter-spacing:-.03em;margin:11px 0 0;color:#4e2630}
+.portfolio-heading>p{max-width:390px;margin:0 0 4px;color:#79736b;font-size:12px;line-height:1.8}
+.portfolio-category+.portfolio-category{margin-top:54px}
+.portfolio-category-heading{display:flex;align-items:end;justify-content:space-between;gap:24px;border-bottom:1px solid #e7ddd5;margin:0 1.2vw 20px;padding:0 0 13px}
+.portfolio-category-heading span{font-size:8px;letter-spacing:.17em;color:#a4877d;font-weight:600}
+.portfolio-category-heading h3{font:500 25px/1.2 var(--serif);color:#4e2630;margin:7px 0 0}
+.portfolio-category-heading>p{max-width:390px;margin:0 0 1px;color:#81776f;font-size:11px;line-height:1.65}
+.portfolio-category-wedding .portfolio-category-heading span{color:#8b713d}
+.portfolio-category-wedding .portfolio-category-heading h3{color:#5d6247}
+.portfolio-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 15px}
+.portfolio-card{margin:0;min-width:0;background:#fffdfa;border:1px solid #eee8df;padding:7px 7px 0;box-shadow:0 4px 16px #39291a08}
+.portfolio-card img{display:block;width:100%;aspect-ratio:1.18;object-fit:cover;background:#eee9e1}
+.portfolio-card figcaption{min-height:42px;display:flex;align-items:center;padding:8px 7px;color:#65584e;font:500 13px/1.35 var(--serif)}
+.portfolio-category-wedding .portfolio-card figcaption{color:#596047}
+.portfolio-cta{display:flex;align-items:center;justify-content:space-between;gap:24px;margin:34px 1.2vw 0;padding:19px 23px;background:#f1e5dc;border-left:2px solid #d8bdb4}
+.portfolio-cta p{margin:0;color:#5e4746;font:500 16px var(--serif)}
+.portfolio-cta .button{min-height:43px;gap:16px}
+@media(max-width:1050px){.portfolio-section{padding-left:4.5vw;padding-right:4.5vw}.portfolio-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.portfolio-category+.portfolio-category{margin-top:44px}}
+@media(max-width:700px){.portfolio-section{padding:54px 18px 60px}.portfolio-heading{display:block;margin:0 2px 29px}.portfolio-heading h2{font-size:35px}.portfolio-heading>p{margin-top:11px;font-size:11px}.portfolio-category+.portfolio-category{margin-top:38px}.portfolio-category-heading{display:block;margin:0 2px 15px}.portfolio-category-heading h3{font-size:23px}.portfolio-category-heading>p{margin-top:8px;font-size:10px}.portfolio-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.portfolio-card{padding:5px 5px 0}.portfolio-card img{aspect-ratio:.94}.portfolio-card figcaption{min-height:39px;padding:7px 5px;font-size:11px}.portfolio-cta{display:block;margin:24px 0 0;padding:18px}.portfolio-cta p{font-size:15px;margin-bottom:13px}.portfolio-cta .button{width:100%;justify-content:center}}
 .form-row{grid-template-columns:repeat(2,minmax(0,1fr))}
 .form-row label,.quote-form label{min-width:0}
 .quote-form input,.quote-form textarea{width:100%;min-width:0}
